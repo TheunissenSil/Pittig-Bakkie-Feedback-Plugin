@@ -26,15 +26,17 @@ class Frontend {
                 '1.0.0',
                 true
             );
-            
+
             wp_localize_script('pittig-bakkie-feedback-plugin-frontend', 'pittigBakkieFeedbackPlugin', [
-                'ajaxUrl' => admin_url('admin-ajax.php'),    
-            ]);
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('get_feedback_nonce'),
+            ]);            
         });
     }
 
     public function render_feedback_mode_button() {
         require_once plugin_dir_path(__FILE__) . 'partials/FeedbackModeButton.php';
+        error_log('Feedback mode button rendered');
     }
 
     public function render_feedback_sidebar() {

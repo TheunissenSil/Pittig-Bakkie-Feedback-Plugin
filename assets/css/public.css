@@ -19,7 +19,6 @@
     color: var(--text-color-light) !important;
 }
 
-
 /* Feedback toggle button */
 .feedback-mode-button-wrapper {
     position: fixed;
@@ -130,6 +129,11 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     padding: 20px;
 }
 
+.feedback-sidebar .feedback-sidebar-body {
+    height: 100%;
+    padding: 30px 0;
+}
+
 .feedback-sidebar .feedback-sidebar-header {
     display: flex;
     justify-content: center;
@@ -147,4 +151,55 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
 .feedback-sidebar .feedback-sidebar-footer #scale-to-phone:hover {
     background-color: var(--secondary-color) !important;
     color: var(--text-color) !important;
+}
+
+/* Feedback item styles */
+.feedback-sidebar #feedback-list {
+    height: 100%;
+    padding-right: 10px;
+    overflow-y: scroll;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar {
+    width: 8px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-track {
+    background: var(--text-color-light);
+    border-radius: 10px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-color-light);
+}
+
+.feedback-sidebar .feedback-item {
+    background-color: var(--text-color-light);
+    color: var(--text-color);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.feedback-sidebar .feedback-item p {
+    margin: 5px 0;
+    color: var(--text-color);
+}
+
+.feedback-sidebar .feedback-item .feedback-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666666;
+}
+
+.feedback-sidebar .feedback-item .admin-comment {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: 3px solid var(--primary-color);
+    font-size: 12px;
+    color: #333333;
 }

@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.addEventListener('mouseover', handleMouseOver);
             document.body.addEventListener('mouseout', handleMouseOut);
             document.body.addEventListener('click', handleElementClick);
+            
+            // Fetch feedback when feedback mode is enabled
+            FeedbackFetcher.fetchFeedback();
         };
 
         // Disable Feedback Mode
@@ -124,7 +127,70 @@ document.addEventListener('DOMContentLoaded', function () {
         return { scale, reset };
     })();
 
-    // Button Event Listeners
-    document.getElementById('enable-feedback-mode').addEventListener('click', FeedbackMode.enable);
-    document.getElementById('disable-feedback-mode').addEventListener('click', FeedbackMode.disable);
+    // FeedbackFetcher Module
+    const FeedbackFetcher = (() => {
+        const feedbackListContainer = document.getElementById('feedback-list');
+
+        // Fetch feedback from the server
+        const fetchFeedback = () => {
+            fetch(pittigBakkieFeedbackPlugin.ajaxUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'get_feedback',
+                    _wpnonce: pittigBakkieFeedbackPlugin.nonce 
+                })
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    renderFeedbackList(data.data);
+                } else {
+                    feedbackListContainer.innerHTML =
+                        '<p>' + (data.data || 'No feedback available.') + '</p>';
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching feedback:', error);
+                feedbackListContainer.innerHTML =
+                    '<p>Error loading feedback.</p>';
+            });
+        };
+
+        // Render feedback items in the list
+        const renderFeedbackList = (feedbackItems) => {
+            if (!feedbackItems.length) {
+                feedbackListContainer.innerHTML =
+                    '<p>No feedback available.</p>';
+                return;
+            }
+
+            const listHtml = feedbackItems.map((item) =>
+                `<div class="feedback-item" data-id="${item.id}">
+                    <p>${item.feedback_comment}</p>
+                    <div class="feedback-meta">
+                        <p>${item.username || 'Anonymous'}</p>
+                        <p>${item.display_size || 'Unknown'}</p>
+                        <p>${item.status}</p>
+                        <p>${new Date(item.created_at).toLocaleDateString()}</p>
+                    </div>
+                    ${
+                      item.admin_comment
+                        ? `<div class="admin-comment">${item.admin_comment}</div>`
+                        : ''
+                    }
+                 </div>`
+              ).join('');
+
+              feedbackListContainer.innerHTML= listHtml;
+          };
+          
+          return {fetchFeedback};
+      })();
+
+      // Button Event Listeners 
+      document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.enable);  
+      document.getElementById("disable-feedback-mode").addEventListener("click", FeedbackMode.disable);
 });
