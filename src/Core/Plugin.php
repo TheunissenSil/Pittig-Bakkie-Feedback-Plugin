@@ -9,8 +9,8 @@ class Plugin {
 
     private function load_dependencies() {
         // Load the admin and frontend classes
-        require_once Plugin_Dir_path(dirname(__FILE__)) . 'Admin/Admin.php';
-        require_once Plugin_Dir_path(dirname(__FILE__)) . 'Frontend/Frontend.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'Admin/Admin.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'Frontend/Frontend.php';
 
         // Initialize the admin and frontend classes
         $admin = new \PittigBakkieFeedbackPlugin\Admin\Admin();

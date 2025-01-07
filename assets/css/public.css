@@ -1,0 +1,150 @@
+/* Global style */
+:root {
+    --primary-color: #312476;
+    --secondary-color: #20fcc1;
+    --text-color: #0f0f0f;
+    --text-color-light: #ffffff;
+}
+
+.pb-button {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    border-radius: 50px 50px 50px 50px;
+    padding: 08px 30px 08px 30px;
+    border: none;
+    cursor: pointer;
+}
+.pb-button:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color-light) !important;
+}
+
+
+/* Feedback toggle button */
+.feedback-mode-button-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+} 
+
+.feedback-mode-active .feedback-mode-button {
+    display: none;
+}  
+
+/* Feedback mode */
+.feedback-mode-active .elementor-element.outlined {
+    cursor: pointer;
+}
+
+.feedback-mode-active .elementor-element.outlined::before,
+.feedback-mode-active .elementor-element.permanent-highlight::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    outline: 1px solid var(--primary-color);
+    z-index: 1000 !important;
+    background-color: rgba(49, 36, 118, 0.1) !important;
+    pointer-events: none;
+
+    /* Add transition for smooth effect */
+    transition: outline-color 0.1s ease, background-color 0.1s ease;
+}
+
+.close-button-in-element {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    background-image: url('../img/close-icon.png');
+    background-size: 50%;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Sidebar styles */
+body > *:not(#feedback-sidebar):not(#wp-adminbar) {
+    transform: scale(1); 
+    transform-origin: top left; 
+    transition: transform 0.3s ease; 
+}
+
+.feedback-mode-active .feedback-sidebar {
+    right: 0; 
+    height: 100vh; 
+}
+
+#wpadminbar {
+    z-index: 1001;
+    position: fixed;
+}
+
+body > *:not(#wp-adminbar) .feedback-sidebar {
+    padding-top: 0px;
+}
+
+.feedback-sidebar {
+    position: fixed;
+    right: -350px;
+    top: 0;
+    width: 300px;
+    height: 100vh; 
+    background-color: var(--primary-color);
+    font-family: 'Poppins';
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    padding-top: 32px;
+}
+
+.feedback-mode-active .feedback-sidebar {
+    right: 0 !important;
+}
+
+.feedback-sidebar .close-icon {
+    position: absolute;
+    top: 52px;
+    left: 20px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+
+.feedback-sidebar .feedback-sidebar-content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+}
+
+.feedback-sidebar .feedback-sidebar-header {
+    display: flex;
+    justify-content: center;
+}
+
+.feedback-sidebar .feedback-sidebar-header .feedback-sidebar .feedback-sidebar-header {
+    display: flex;
+    justify-content: center;
+}
+
+.feedback-sidebar .feedback-sidebar-footer #scale-to-phone {
+    width: 100%;
+}
+
+.feedback-sidebar .feedback-sidebar-footer #scale-to-phone:hover {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+}
