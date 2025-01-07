@@ -1,24 +1,23 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Constants
     const SIDEBAR_WIDTH = 300;
+    const ajaxUrl = pittigBakkieFeedbackPlugin.ajaxUrl;
+    const nonce = pittigBakkieFeedbackPlugin.nonce;
 
     // FeedbackMode Module
     const FeedbackMode = (() => {
         let permanentlyHighlightedElement = null;
 
-        // Enable Feedback Mode
         const enable = () => {
             document.body.classList.add('feedback-mode-active');
             PageScaler.scale();
             document.body.addEventListener('mouseover', handleMouseOver);
             document.body.addEventListener('mouseout', handleMouseOut);
             document.body.addEventListener('click', handleElementClick);
-            
-            // Fetch feedback when feedback mode is enabled
+
             FeedbackFetcher.fetchFeedback();
         };
 
-        // Disable Feedback Mode
         const disable = () => {
             document.body.classList.remove('feedback-mode-active');
             PageScaler.reset();
@@ -30,6 +29,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 removePermanentHighlight(permanentlyHighlightedElement);
                 permanentlyHighlightedElement = null;
             }
+        };
+
+        const checkSessionAndEnable = () => {
+            fetch(ajaxUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'check_key_session',
+                    _wpnonce: nonce,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        enable(); 
+                    } else {
+                        showAccessKeyForm();
+                    }
+                })
+                .catch((error) => console.error(error));
+        };
+
+        const showAccessKeyForm = () => {
+            const accessKeyForm = document.getElementById('access-key-form');
+            const enableButton = document.getElementById('enable-feedback-mode');
+
+            // Show the form and hide the button
+            enableButton.style.display = 'none';
+            accessKeyForm.style.display = 'block';
+
+            // Add event listener to handle form submission
+            accessKeyForm.addEventListener('submit', (e) => {
+                e.preventDefault(); // Prevent default form submission
+
+                const accessKeyInput = document.getElementById('access-key-input');
+                const keyValue = accessKeyInput.value.trim();
+
+                if (!keyValue) {
+                    alert('Please enter an access key.');
+                    return;
+                }
+
+                validateAccessKey(keyValue, accessKeyForm, enableButton);
+            });
+        };
+
+        const validateAccessKey = (key, form, button) => {
+            fetch(ajaxUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'validate_key',
+                    key: key,
+                    _wpnonce: nonce,
+                }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        alert('Access granted!');
+                        form.style.display = 'none'; 
+                        button.style.display = 'block'; 
+                        enable(); 
+                    } else {
+                        alert(data.data || 'Invalid access key.');
+                    }
+                })
+                .catch((error) => console.error(error));
         };
 
         // Handles the hover over the elements
@@ -90,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (closeButton) closeButton.remove();
         };
 
-        return { enable, disable };
+        return { checkSessionAndEnable, disable };
     })();
 
     // PageScaler Module
@@ -133,14 +200,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Fetch feedback from the server
         const fetchFeedback = () => {
-            fetch(pittigBakkieFeedbackPlugin.ajaxUrl, {
+            fetch(ajaxUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({
                     action: 'get_feedback',
-                    _wpnonce: pittigBakkieFeedbackPlugin.nonce 
+                    _wpnonce: nonce, 
                 })
             })
             .then((response) => response.json())
@@ -191,6 +258,6 @@ document.addEventListener('DOMContentLoaded', function () {
       })();
 
       // Button Event Listeners 
-      document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.enable);  
+      document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.checkSessionAndEnable);  
       document.getElementById("disable-feedback-mode").addEventListener("click", FeedbackMode.disable);
 });

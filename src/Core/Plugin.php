@@ -18,6 +18,7 @@ class Plugin {
 
         // Initialize the handler classes
         $feedback_handler = new \PittigBakkieFeedbackPlugin\Core\Handlers\FeedbackHandler();
+        $access_key_handler = new \PittigBakkieFeedbackPlugin\Core\Handlers\AccessKeyHandler();
 
         // Initialize the admin and frontend classes
         $admin = new \PittigBakkieFeedbackPlugin\Admin\Admin();

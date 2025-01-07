@@ -19,7 +19,7 @@
     color: var(--text-color-light) !important;
 }
 
-/* Feedback toggle button */
+/* Feedback enable button */
 .feedback-mode-button-wrapper {
     position: fixed;
     bottom: 20px;
@@ -30,6 +30,34 @@
 .feedback-mode-active .feedback-mode-button {
     display: none;
 }  
+
+.access-key-form {
+    background-color: var(--primary-color);
+    border-radius: 50px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.access-key-form input {
+    border-radius: 25px 0 0 25px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    max-width: 200px !important;
+    color: var(--text-color) !important;
+    background-color: var(--text-color-light) !important;
+}
+
+.access-key-form button {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color-light) !important;
+    border-radius: 50px;
+    padding: 08px 30px 08px 30px;
+    border: none;
+    cursor: pointer;
+}
 
 /* Feedback mode */
 .feedback-mode-active .elementor-element.outlined {
