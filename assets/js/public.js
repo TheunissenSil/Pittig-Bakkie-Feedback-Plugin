@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (permanentlyHighlightedElement) {
                 removePermanentHighlight(permanentlyHighlightedElement);
-                permanentlyHighlightedElement = null;
             }
 
             // Disable phone mode if active
@@ -158,12 +157,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.stopPropagation();
                 removePermanentHighlight(target);
                 enable(); 
-                permanentlyHighlightedElement = null;
             });
 
             target.appendChild(closeButton);
 
             document.body.removeEventListener('mouseover', handleMouseOver);
+
+            FeedbackHandler.createFeedback(target);
         };
 
         // Clears all outlines
@@ -173,12 +173,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Removes the permanent highlight
         const removePermanentHighlight = (element) => {
+            permanentlyHighlightedElement = null;
             element.classList.remove('permanent-highlight');
             const closeButton = element.querySelector('.close-button-in-element');
             if (closeButton) closeButton.remove();
         };
 
-        return { checkSessionAndEnable, disable, enable };
+        return { checkSessionAndEnable, disable, enable, removePermanentHighlight };
     })();
 
     // PageScaler Module
@@ -241,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             iframe.style.position = 'relative';
         
             document.body.appendChild(iframe);
-        
+
             // Move all children except excluded ones into the iframe
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.body.className = document.body.className;
@@ -327,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return { toggle: togglePhoneMode, disablePhoneMode };
     })();
 
-    // FeedbackFetcher Module
+    // Feedbackhandler Module
     const FeedbackHandler = (() => {
         const feedbackListContainer = document.getElementById('feedback-list');
 
@@ -423,6 +424,97 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 feedbackMessage.style.display = 'none';
             }, 5000);
+        };
+
+        const createFeedback = (target) => {
+            const feedbackListContainer = document.getElementById('feedback-list');
+        
+            const feedbackItem = document.createElement('div');
+            feedbackItem.classList.add('feedback-item');
+        
+            const feedbackItemHeader = document.createElement('div');
+            feedbackItemHeader.classList.add('feedback-item-header');
+            feedbackItemHeader.textContent = 'New Feedback';
+        
+            const feedbackItemBody = document.createElement('div');
+            feedbackItemBody.classList.add('feedback-item-body');
+            feedbackItemBody.style.display = 'block';
+        
+            const feedbackTitle = document.createElement('p');
+            feedbackTitle.textContent = 'Feedback comment:';
+        
+            const feedbackTextarea = document.createElement('textarea');
+            feedbackTextarea.classList.add('edit-feedback-textarea');
+        
+            const saveButton = document.createElement('button');
+            saveButton.classList.add('save-feedback');
+            saveButton.textContent = 'Save';
+        
+            const cancelButton = document.createElement('button');
+            cancelButton.classList.add('cancel-feedback');
+            cancelButton.textContent = 'Cancel';
+
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            const displaySize = scaleToPhoneButton.dataset.phoneMode === 'true' ? 'Phone' : `${window.innerWidth}x${window.innerHeight}`;
+            const feedbackMeta = document.createElement('p');
+            feedbackMeta.classList.add('feedback-meta');
+            feedbackMeta.innerHTML = `Display-size: ${displaySize}<br>Elementor ID: ${target.dataset.id}`;
+        
+            feedbackItemBody.appendChild(feedbackTitle);
+            feedbackItemBody.appendChild(feedbackTextarea);
+            feedbackItemBody.appendChild(feedbackMeta);
+            feedbackItemBody.appendChild(saveButton);
+            feedbackItemBody.appendChild(cancelButton);
+        
+            feedbackItem.appendChild(feedbackItemHeader);
+            feedbackItem.appendChild(feedbackItemBody);
+        
+            feedbackListContainer.appendChild(feedbackItem);
+        
+            // Add event listeners for save and cancel buttons
+            saveButton.addEventListener('click', () => {
+                const feedbackComment = feedbackTextarea.value.trim();
+                if (!feedbackComment) {
+                    alert('Please enter your feedback.');
+                    return;
+                }
+
+                const elementorId = target.dataset.id;
+
+                fetch(ajaxUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'save_feedback',
+                        elementor_id: elementorId,
+                        feedback_comment: feedbackComment,
+                        display_size: displaySize,
+                        _wpnonce: nonce,
+                    }),
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        showFeedbackMessage('Feedback saved successfully.');
+                        feedbackItem.remove();
+                        FeedbackMode.removePermanentHighlight(target);
+                        FeedbackMode.enable();
+                        FeedbackHandler.fetchFeedback();
+                    } else {
+                        showFeedbackMessage(data.data || 'Failed to save feedback.', true);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error saving feedback:', error);
+                    showFeedbackMessage(data.data || 'Failed to save feedback.', true);
+                });
+            });
+        
+            cancelButton.addEventListener('click', () => {
+                feedbackItem.remove();
+                FeedbackMode.removePermanentHighlight(target);
+                FeedbackMode.enable(); 
+            });
         };
         
         // Handle edit feedback
@@ -541,7 +633,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
                 
-        return {fetchFeedback};
+        return {fetchFeedback, createFeedback};
     })();
 
     // Button Event Listeners 

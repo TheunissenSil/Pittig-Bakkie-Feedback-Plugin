@@ -17,6 +17,9 @@ class FeedbackHandler {
 
         add_action('wp_ajax_delete_feedback', [$this, 'delete_feedback']);
         add_action('wp_ajax_nopriv_delete_feedback', [$this, 'delete_feedback']);
+
+        add_action('wp_ajax_save_feedback', [$this, 'save_feedback']);
+        add_action('wp_ajax_nopriv_save_feedback', [$this, 'save_feedback']);
     }
 
     // Validate nonce
@@ -93,6 +96,7 @@ class FeedbackHandler {
         }
     }
 
+    // Deleete the feedback
     public function delete_feedback() {
         $this->validate_nonce();
     
@@ -131,6 +135,46 @@ class FeedbackHandler {
             wp_send_json_success(__('Feedback deleted successfully.', 'pittig-bakkie-feedback-plugin'));
         } else {
             wp_send_json_error(__('Failed to delete feedback.', 'pittig-bakkie-feedback-plugin'));
+        }
+    }
+
+    // Save the feedback 
+    public function save_feedback() {
+        $this->validate_nonce();
+    
+        if (!session_id()) {
+            session_start();
+        }
+    
+        if (!isset($_SESSION['feedback_username'])) {
+            wp_send_json_error(__('You are not authorized to save feedback.', 'pittig-bakkie-feedback-plugin'));
+            return;
+        }
+    
+        global $wpdb;
+        $elementor_id = intval($_POST['elementor_id']);
+        $feedback_comment = sanitize_text_field($_POST['feedback_comment']);
+        $display_size = sanitize_text_field($_POST['display_size']);
+        $username = $_SESSION['feedback_username'];
+    
+        // Insert the feedback
+        $inserted = $wpdb->insert(
+            $this->table_name,
+            [
+                'elementor_id' => $elementor_id,
+                'feedback_comment' => $feedback_comment,
+                'username' => $username,
+                'display_size' => $display_size,
+                'status' => 'pending',
+                'created_at' => current_time('mysql'),
+            ],
+            ['%d', '%s', '%s', '%s', '%s', '%s']
+        );
+    
+        if ($inserted) {
+            wp_send_json_success(__('Feedback saved successfully.', 'pittig-bakkie-feedback-plugin'));
+        } else {
+            wp_send_json_error(__('Failed to save feedback.', 'pittig-bakkie-feedback-plugin'));
         }
     }
 }
