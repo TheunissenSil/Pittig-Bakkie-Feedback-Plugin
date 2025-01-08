@@ -202,28 +202,52 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     background: var(--text-color-light);
 }
 
-.feedback-sidebar .feedback-item {
+.feedback-item {
+    background-color: #F4F4F4;
+    color: var(--text-color);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.feedback-item-header {
+    padding: 10px;
+    cursor: pointer;
     background-color: var(--text-color-light);
     color: var(--text-color);
     border-radius: 10px;
-    padding: 10px;
-    margin-bottom: 10px;
-    font-size: 14px;
+    font-size: 15px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.feedback-sidebar .feedback-item p {
+.feedback-item-header .feedback-date {
+    font-size: 12px; 
+    color: var(--text-color);
+}
+
+.feedback-item-body {
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    background-color: #F4F4F4;
+    font-size: 13px; 
+}
+
+.feedback-item-body p {
     margin: 5px 0;
     color: var(--text-color);
 }
 
-.feedback-sidebar .feedback-item .feedback-meta {
-    display: flex;
-    justify-content: space-between;
+.feedback-item-body .feedback-meta {
     font-size: 12px;
     color: #666666;
 }
 
-.feedback-sidebar .feedback-item .admin-comment {
+.feedback-item-body .admin-comment {
     margin-top: 10px;
     padding: 10px;
     background-color: #f9f9f9;

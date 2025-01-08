@@ -8,19 +8,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const FeedbackMode = (() => {
         let permanentlyHighlightedElement = null;
 
-        const enable = () => {
+        const enable = (doc = document) => {
             document.body.classList.add('feedback-mode-active');
-            PageScaler.scale();
-            document.body.addEventListener('mouseover', handleMouseOver);
-            document.body.addEventListener('mouseout', handleMouseOut);
-            document.body.addEventListener('click', handleElementClick);
+
+            // Scale the page if is not phone mode
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            if (scaleToPhoneButton.dataset.phoneMode !== 'true') {
+                PageScaler.scale();
+            }
+
+            doc.body.addEventListener('mouseover', handleMouseOver);
+            doc.body.addEventListener('mouseout', handleMouseOut);
+            doc.body.addEventListener('click', handleElementClick);
 
             FeedbackFetcher.fetchFeedback();
         };
 
         const disable = () => {
             document.body.classList.remove('feedback-mode-active');
-            PageScaler.reset();
             document.body.removeEventListener('mouseover', handleMouseOver);
             document.body.removeEventListener('mouseout', handleMouseOut);
             document.body.removeEventListener('click', handleElementClick);
@@ -29,6 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 removePermanentHighlight(permanentlyHighlightedElement);
                 permanentlyHighlightedElement = null;
             }
+
+            // Disable phone mode if active
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            if (scaleToPhoneButton.dataset.phoneMode === 'true') {
+                PhoneMode.disablePhoneMode();
+            }
+
+            PageScaler.reset();
         };
 
         const checkSessionAndEnable = () => {
@@ -157,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (closeButton) closeButton.remove();
         };
 
-        return { checkSessionAndEnable, disable };
+        return { checkSessionAndEnable, disable, enable };
     })();
 
     // PageScaler Module
@@ -192,6 +205,118 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         return { scale, reset };
+    })();
+
+    // PhoneMode Module
+    const PhoneMode = (() => {
+        const enablePhoneMode = () => {
+            const bodyChildren = Array.from(document.body.children).filter(
+                (child) => !child.matches('#feedback-sidebar, #wpadminbar')
+            );
+        
+            // Hide scrollbars and center content
+            document.body.style.height = '100vh';
+            document.body.style.overflow = 'hidden';
+            document.body.style.display = 'flex';
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+            document.body.style.paddingRight = '300px';
+        
+            // Create iframe
+            const iframe = document.createElement('iframe');
+            iframe.id = 'phone-size-iframe';
+            iframe.style.width = '394px';
+            iframe.style.height = '700px';
+            iframe.style.border = '1px solid #000';
+            iframe.style.borderRadius = '10px';
+            iframe.style.overflowY = 'scroll';
+            iframe.style.position = 'relative';
+        
+            document.body.appendChild(iframe);
+        
+            // Move all children except excluded ones into the iframe
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.body.className = document.body.className;
+        
+            // Set iframe body styles
+            iframeDoc.body.style.width = '375px';
+            iframeDoc.body.style.height = '700px';
+            iframeDoc.body.style.boxSizing = 'border-box';
+            iframeDoc.body.style.margin = '0';
+        
+            // Copy head contents to iframe
+            const headContent = document.head.cloneNode(true);
+            iframeDoc.head.innerHTML = '';
+            Array.from(headContent.children).forEach((child) => {
+                iframeDoc.head.appendChild(child.cloneNode(true));
+            });
+        
+            // Move body children to iframe
+            bodyChildren.forEach((child) => {
+                iframeDoc.body.appendChild(child);
+                child.style.transform = '';
+                child.style.transformOrigin = '';
+                child.style.height = 'auto';
+            });
+        
+            // Add viewport meta tag for media queries inside the iframe
+            const viewportMetaTag = iframeDoc.createElement('meta');
+            viewportMetaTag.name = 'viewport';
+            viewportMetaTag.content = 'width=375, initial-scale=1';
+            iframeDoc.head.appendChild(viewportMetaTag);
+        
+            // Update button text and state
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            scaleToPhoneButton.textContent = 'Scale Back to Desktop';
+            scaleToPhoneButton.dataset.phoneMode = 'true';
+
+            FeedbackMode.enable(iframeDoc);
+        };
+
+        const disablePhoneMode = () => {
+            const iframe = document.getElementById('phone-size-iframe');
+            if (iframe) {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeBodyChildren = Array.from(iframeDoc.body.children);
+        
+                // Move children back to the main document body
+                iframeBodyChildren.forEach((child) => {
+                    document.body.appendChild(child);
+                });
+        
+                // Remove the iframe
+                iframe.remove();
+            }
+        
+            // Reset body styles
+            document.body.style.height = '';
+            document.body.style.overflow = '';
+            document.body.style.display = '';
+            document.body.style.justifyContent = '';
+            document.body.style.alignItems = '';
+            document.body.style.paddingRight = '';
+        
+            // Scale back to desktop
+            PageScaler.scale();
+        
+            // Update button text and state
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            scaleToPhoneButton.textContent = 'Scale to Phone';
+            scaleToPhoneButton.dataset.phoneMode = 'false';
+        };
+
+        const togglePhoneMode = () => {
+            const scaleToPhoneButton = document.getElementById('scale-to-phone');
+            let isPhoneMode = scaleToPhoneButton.dataset.phoneMode === 'true';
+    
+            if (!isPhoneMode) {
+                enablePhoneMode();
+            } else {
+                disablePhoneMode();
+            }
+        };
+
+        return { toggle: togglePhoneMode, disablePhoneMode };
     })();
 
     // FeedbackFetcher Module
@@ -236,22 +361,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const listHtml = feedbackItems.map((item) =>
                 `<div class="feedback-item" data-id="${item.id}">
-                    <p>${item.feedback_comment}</p>
-                    <div class="feedback-meta">
-                        <p>${item.username || 'Anonymous'}</p>
-                        <p>${item.display_size || 'Unknown'}</p>
-                        <p>${item.status}</p>
-                        <p>${new Date(item.created_at).toLocaleDateString()}</p>
+                    <div class="feedback-item-header">
+                        ${item.username || 'Anonymous'}
+                        <div class="feedback-date">${new Date(item.created_at).toLocaleDateString()}</div>
                     </div>
-                    ${
-                      item.admin_comment
-                        ? `<div class="admin-comment">${item.admin_comment}</div>`
-                        : ''
-                    }
+                    <div class="feedback-item-body">
+                        <p>${item.feedback_comment}</p>
+                        <p class="feedback-meta">
+                            Display-size: ${item.display_size || 'Unknown'}<br>
+                            Status: ${item.status}
+                        </p>
+                        ${
+                          item.admin_comment
+                            ? `<div class="admin-comment">${item.admin_comment}</div>`
+                            : ''
+                        }
+                    </div>
                  </div>`
               ).join('');
 
               feedbackListContainer.innerHTML= listHtml;
+
+              // Add event listeners for accordion functionality
+              document.querySelectorAll('.feedback-item-header').forEach(header => {
+                  header.addEventListener('click', () => {
+                      const body = header.nextElementSibling;
+                      body.style.display = body.style.display === 'block' ? 'none' : 'block';
+                  });
+              });
           };
           
           return {fetchFeedback};
@@ -260,4 +397,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // Button Event Listeners 
       document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.checkSessionAndEnable);  
       document.getElementById("disable-feedback-mode").addEventListener("click", FeedbackMode.disable);
+      document.getElementById('scale-to-phone').addEventListener('click', () => {
+        PhoneMode.toggle();
+     });
 });
