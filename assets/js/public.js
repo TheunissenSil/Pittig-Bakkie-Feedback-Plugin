@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar: 300,
         ajaxUrl: pittigBakkieFeedbackPlugin.ajaxUrl,
         nonce: pittigBakkieFeedbackPlugin.nonce,
-        sessionUsername: pittigBakkieFeedbackPlugin.sessionUsername
+        sessionUsername: pittigBakkieFeedbackPlugin.sessionUsername,
+        isAdmin: pittigBakkieFeedbackPlugin.isAdmin
     };
 
     // Initialize the feedback list

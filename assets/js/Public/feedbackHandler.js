@@ -4,13 +4,11 @@ import FeedbackMode from './feedbackMode.js';
 const FeedbackHandler = (() => {
     let config;
 
-    // Initializtion to get all variables
     const init = (cfg) => {
         config = cfg;
         fetchFeedback();
     };
 
-    // Fetch feedback from the server
     const fetchFeedback = () => {
         fetch(config.ajaxUrl, {
             method: 'POST',
@@ -37,32 +35,27 @@ const FeedbackHandler = (() => {
                 '<p>Error loading feedback.</p>';
         });
     };
-    
-    // Render feedback items in the list
+
     const renderFeedbackList = (feedbackItems) => {
         const feedbackListContainer = document.getElementById('feedback-list');
         const elementorElements = Array.from(document.querySelectorAll('.elementor-element'));
-    
-        // If their is no feedback available return
+
         if (!feedbackItems.length) {
             feedbackListContainer.innerHTML = '<p>No feedback available.</p>';
             return;
         }
-    
-        // Create a mapping of elementor element positions
+
         const elementPositions = {};
         elementorElements.forEach((el, index) => {
             elementPositions[el.dataset.id] = index;
         });
-    
-        // Sort feedback items based on the position of the corresponding elementor elements
+
         feedbackItems.sort((a, b) => {
             const posA = elementPositions[a.elementor_id];
             const posB = elementPositions[b.elementor_id];
             return posA - posB;
         });
-    
-        // Render the feedback items
+
         const listHtml = feedbackItems.map((item) => `
             <div class="feedback-item ${item.username === config.sessionUsername ? 'editable-feedback' : ''}" data-id="${item.id}" data-elementor-id="${item.elementor_id}">
                 <div class="feedback-item-header">
@@ -80,16 +73,20 @@ const FeedbackHandler = (() => {
                         Display-size: ${item.display_size || 'Unknown'}<br>
                         Status: ${item.status}
                     </p>
-                    ${item.admin_comment ? `<div class="admin-comment">${item.admin_comment}</div>` : ''}
+                    ${item.admin_comment ? `
+                        <div class="admin-comment">
+                            ${item.admin_comment}
+                        </div>
+                    ` : ''}
                     ${item.username === config.sessionUsername ? `
                         <button class="delete-feedback" data-id="${item.id}">Delete</button>
                     ` : ''}
                 </div>
             </div>
         `).join('');    
-    
+
         feedbackListContainer.innerHTML = listHtml;
-    
+
         // Add event listeners for accordion functionality
         document.querySelectorAll('.feedback-item-header').forEach(header => {
             header.addEventListener('click', () => {
@@ -237,6 +234,9 @@ const FeedbackHandler = (() => {
                 showFeedbackMessage('Please enter your feedback.', true);
                 return;
             }
+
+            let currentPage = window.location.pathname;
+            currentPage = currentPage.replace(/\/$/, ''); // Remove trailing slash if it exists
     
             // Save the feedback
             fetch(config.ajaxUrl, {
@@ -245,6 +245,7 @@ const FeedbackHandler = (() => {
                 body: new URLSearchParams({
                     action: 'save_feedback',
                     elementor_id: elementorId,
+                    element_feedback_page: currentPage,
                     feedback_comment: feedbackComment,
                     display_size: displaySize,
                     _wpnonce: config.nonce,

@@ -46,7 +46,8 @@ class Frontend {
             wp_localize_script('pittig-bakkie-feedback-plugin-frontend', 'pittigBakkieFeedbackPlugin', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('feedback_management_nonce'),
-                'sessionUsername' => isset($_SESSION['feedback_username']) ? $_SESSION['feedback_username'] : ''
+                'sessionUsername' => isset($_SESSION['feedback_username']) ? $_SESSION['feedback_username'] : '',
+                'isAdmin' => current_user_can('manage_options')
             ]);             
         });
     }

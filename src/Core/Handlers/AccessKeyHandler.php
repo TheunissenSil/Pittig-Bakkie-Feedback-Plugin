@@ -25,9 +25,11 @@ class AccessKeyHandler {
 
     // Validate the nonce
     private function validate_nonce() {
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'keys_management_nonce')) {
-            wp_send_json_error(__('Invalid or expired nonce.', 'pittig-bakkie-feedback-plugin'));
-            exit;
+        if (!isset($_POST['_wpnonce']) || 
+            (!wp_verify_nonce($_POST['_wpnonce'], 'feedback_management_nonce') && 
+             !wp_verify_nonce($_POST['_wpnonce'], 'keys_management_nonce'))) {
+            wp_send_json_error(__('Unauthorized request.', 'pittig-bakkie-feedback-plugin'));
+            return;
         }
     }
 
@@ -128,11 +130,7 @@ class AccessKeyHandler {
 
     // Validate access key
     public function validate_key() {
-        // Different nonce for this action
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'feedback_management_nonce')) {
-            wp_send_json_error(__('Invalid or expired nonce.', 'pittig-bakkie-feedback-plugin'));
-            exit;
-        }
+        $this->validate_nonce();
 
         // Check if key is provided
         if (!isset($_POST['key'])) {
@@ -168,11 +166,7 @@ class AccessKeyHandler {
 
     // Check if a valid session exists
     public function check_key_session() {
-        // Different nonce for this action
-        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'feedback_management_nonce')) {
-            wp_send_json_error(__('Invalid or expired nonce.', 'pittig-bakkie-feedback-plugin'));
-            exit;
-        }
+        $this->validate_nonce();
 
         if (!session_id()) {
             session_start();

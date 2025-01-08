@@ -7,6 +7,7 @@ const FeedbackMode = (() => {
     let config;
     const init = (cfg) => {
         config = cfg;
+        setupFeedbackAccordion();
     };
 
     // Element that is permanently highlighted
@@ -212,6 +213,15 @@ const FeedbackMode = (() => {
         document.body.removeEventListener('mouseover', handleMouseOver);
     }
 
+    // Open the feedback accordion
+    const openFeedbackAccordion = (targetElement) => {
+        const feedbackItemBodies = document.querySelectorAll(`.feedback-item[data-elementor-id="${targetElement}"] .feedback-item-body`);
+        console.log(feedbackItemBodies);
+        feedbackItemBodies.forEach(body => {
+            body.style.display = 'block';
+        });
+    };
+
     // Clears all outlines
     const clearOutlines = () => {
         document.querySelectorAll('.outlined').forEach((el) => el.classList.remove('outlined'));
@@ -235,6 +245,24 @@ const FeedbackMode = (() => {
         const addFeedbackItem = document.querySelector('.feedback-item.new-feedback');
         if (addFeedbackItem) {
             addFeedbackItem.remove();
+        }
+    };
+
+    // Check if ondomlead setup the feedback accordion opening
+    const setupFeedbackAccordion = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetElementIs = urlParams.get('targetElementIs');
+    
+        if (targetElementIs) {
+            const targetElement = document.querySelector(`.elementor-element[data-id="${targetElementIs}"]`);
+            if (targetElement) {
+                await checkSessionAndEnable();
+                setTimeout(() => {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    openFeedbackAccordion(targetElementIs);
+                    addPermanentHighlight(targetElement);
+                }, 1000);
+            }
         }
     };
 

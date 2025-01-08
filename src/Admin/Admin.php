@@ -11,7 +11,7 @@ class Admin {
 
     public function enqueue_scripts($hook_suffix) {
         // Check if the current page is the Feedback or Access Keys page
-        if ($hook_suffix === 'toplevel_page_feedback' || $hook_suffix === 'feedback_page_access-keys') {
+        if ($hook_suffix === 'toplevel_page_feedback') {
             // Enqueue style
             wp_enqueue_style(
                 'pittig-bakkie-feedback-plugin-admin',
@@ -20,17 +20,40 @@ class Admin {
                 '1.0.0'
             );
 
-            // Enqueue script
+            // Enqueue script for Feedback page
             wp_enqueue_script(
-                'pittig-bakkie-feedback-plugin-admin',
-                plugin_dir_url(__FILE__) . '../../assets/js/admin.js',
+                'pittig-bakkie-feedback-plugin-admin-feedback',
+                plugin_dir_url(__FILE__) . '../../assets/js/admin-feedback.js',
                 [],
                 '1.0.0',
                 true
             );
 
             // Localize script
-            wp_localize_script('pittig-bakkie-feedback-plugin-admin', 'pittigBakkieFeedbackPlugin', [
+            wp_localize_script('pittig-bakkie-feedback-plugin-admin-feedback', 'pittigBakkieFeedbackPlugin', [
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('feedback_management_nonce'),
+            ]);
+        } elseif ($hook_suffix === 'feedback_page_access-keys') {
+            // Enqueue style
+            wp_enqueue_style(
+                'pittig-bakkie-feedback-plugin-admin',
+                plugin_dir_url(__FILE__) . '../../assets/css/admin.css',
+                [],
+                '1.0.0'
+            );
+
+            // Enqueue script for Access Keys page
+            wp_enqueue_script(
+                'pittig-bakkie-feedback-plugin-admin-access-keys',
+                plugin_dir_url(__FILE__) . '../../assets/js/admin-access-keys.js',
+                [],
+                '1.0.0',
+                true
+            );
+
+            // Localize script
+            wp_localize_script('pittig-bakkie-feedback-plugin-admin-access-keys', 'pittigBakkieFeedbackPlugin', [
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('keys_management_nonce'),
             ]);
@@ -61,10 +84,7 @@ class Admin {
     }
 
     public function render_feedback_page() {
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Feedback', 'pittig-bakkie-feedback-plugin') . '</h1>';
-        echo '<p>' . esc_html__('Welcome to the Feedback admin page.', 'pittig-bakkie-feedback-plugin') . '</p>';
-        echo '</div>';
+        require_once plugin_dir_path(__FILE__) . 'partials/AdminDisplayFeedback.php';
     }
 
     public function render_access_keys_page() {

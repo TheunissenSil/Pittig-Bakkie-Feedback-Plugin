@@ -12,6 +12,7 @@ class Database {
         $sql = "CREATE TABLE $table_name (
             id INT AUTO_INCREMENT PRIMARY KEY,
             elementor_id VARCHAR(255) NOT NULL,
+            element_feedback_page VARCHAR(255) NOT NULL,
             feedback_comment TEXT NOT NULL,
             admin_comment TEXT,
             username VARCHAR(255),
