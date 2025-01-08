@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Require classes
-require_once plugin_dir_path(__FILE__) . 'src/Core/Plugin.php';
-require_once plugin_dir_path(__FILE__) . 'src/Core/Database.php';
+require_once plugin_dir_path(__FILE__) . 'src/core/Plugin.php';
+require_once plugin_dir_path(__FILE__) . 'src/core/Database.php';
 
 // Create databse tables on plugin activation
 function pittig_bakkie_feedback_plugin_activate() {

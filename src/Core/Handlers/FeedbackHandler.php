@@ -7,8 +7,11 @@ class FeedbackHandler {
 
     public function __construct() {
         global $wpdb;
+
+        // Set table name
         $this->table_name = $wpdb->prefix . 'pittig_bakkie_feedback';
 
+        // Add AJAX actions
         add_action('wp_ajax_get_feedback', [$this, 'get_feedback']);
         add_action('wp_ajax_nopriv_get_feedback', [$this, 'get_feedback']);
 
@@ -59,12 +62,15 @@ class FeedbackHandler {
             session_start();
         }
     
+        // Check if the user is logged in
         if (!isset($_SESSION['feedback_username'])) {
             wp_send_json_error(__('You are not authorized to edit this feedback.', 'pittig-bakkie-feedback-plugin'));
             return;
         }
     
         global $wpdb;
+
+        // Get variables
         $feedback_id = intval($_POST['id']);
         $new_comment = sanitize_text_field($_POST['feedback_comment']);
         $username = $_SESSION['feedback_username'];
@@ -75,6 +81,7 @@ class FeedbackHandler {
             $feedback_id
         ));
     
+        // Check if the feedback exists and belongs to the current user
         if (!$feedback || $feedback->username !== $username) {
             wp_send_json_error(__('You are not authorized to edit this feedback.', 'pittig-bakkie-feedback-plugin'));
             return;
@@ -104,12 +111,15 @@ class FeedbackHandler {
             session_start();
         }
     
+        // Check if the user is logged in
         if (!isset($_SESSION['feedback_username'])) {
             wp_send_json_error(__('You are not authorized to delete this feedback.', 'pittig-bakkie-feedback-plugin'));
             return;
         }
     
         global $wpdb;
+
+        // Get variables
         $feedback_id = intval($_POST['id']);
         $username = $_SESSION['feedback_username'];
     
@@ -119,6 +129,7 @@ class FeedbackHandler {
             $feedback_id
         ));
     
+        // Check if the feedback exists and belongs to the current user
         if (!$feedback || $feedback->username !== $username) {
             wp_send_json_error(__('You are not authorized to delete this feedback.', 'pittig-bakkie-feedback-plugin'));
             return;
@@ -146,13 +157,16 @@ class FeedbackHandler {
             session_start();
         }
     
+        // Check if the user is logged in
         if (!isset($_SESSION['feedback_username'])) {
             wp_send_json_error(__('You are not authorized to save feedback.', 'pittig-bakkie-feedback-plugin'));
             return;
         }
     
         global $wpdb;
-        $elementor_id = intval($_POST['elementor_id']);
+
+        // Get variables
+        $elementor_id = sanitize_text_field($_POST['elementor_id']);
         $feedback_comment = sanitize_text_field($_POST['feedback_comment']);
         $display_size = sanitize_text_field($_POST['display_size']);
         $username = $_SESSION['feedback_username'];
@@ -168,7 +182,7 @@ class FeedbackHandler {
                 'status' => 'pending',
                 'created_at' => current_time('mysql'),
             ],
-            ['%d', '%s', '%s', '%s', '%s', '%s']
+            ['%s', '%s', '%s', '%s', '%s', '%s']
         );
     
         if ($inserted) {

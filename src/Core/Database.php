@@ -3,6 +3,7 @@
 namespace PittigBakkieFeedbackPlugin\Core;
 
 class Database {
+    // Create the feedback table
     public function create_feedback_table() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'pittig_bakkie_feedback';
@@ -23,6 +24,7 @@ class Database {
         dbDelta($sql);
     }    
 
+    // Create the access keys table
     public function create_access_keys_table() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'pittig_bakkie_access_keys';
@@ -39,6 +41,7 @@ class Database {
         dbDelta($sql);
     }    
 
+    // Create the feedback suggestions table
     public function create_feedback_suggestions_table() {
         global $wpdb;
         $feedback_table_name = $wpdb->prefix . 'pittig_bakkie_feedback';

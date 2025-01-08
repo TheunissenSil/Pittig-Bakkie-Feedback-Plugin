@@ -9,13 +9,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Generate key
     generateKeyButton.addEventListener('click', () => {
+        // Validate username
         const username = usernameInput.value.trim();
-        
         if (!username) {
             alert('Please enter a username.');
             return;
         }
 
+        // Generate key
         fetch(ajaxUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
