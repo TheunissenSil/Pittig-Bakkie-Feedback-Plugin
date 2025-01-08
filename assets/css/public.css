@@ -59,6 +59,14 @@
     cursor: pointer;
 }
 
+.access-key-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    text-align: center;
+    padding-bottom: 5px;
+}
+
 /* Feedback mode */
 .feedback-mode-active .elementor-element.outlined {
     cursor: pointer;
@@ -181,6 +189,12 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     color: var(--text-color) !important;
 }
 
+.feedback-message {
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
 /* Feedback item styles */
 .feedback-sidebar #feedback-list {
     height: 100%;
@@ -235,6 +249,7 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     flex-direction: column;
     background-color: #F4F4F4;
     font-size: 13px; 
+    position: relative;
 }
 
 .feedback-item-body p {
@@ -254,4 +269,62 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     border-left: 3px solid var(--primary-color);
     font-size: 12px;
     color: #333333;
+}
+
+/* Edit and delete functoins */
+.edit-feedback {
+    background: url('../img/pencil-icon.png') no-repeat center center;
+    background-size: contain;
+    border: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+/* Textarea styling */
+.edit-feedback-textarea {
+    width: 100%;
+    height: auto;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+/* Save and cancel button styling */
+.save-feedback, .cancel-feedback {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.save-feedback:hover, .cancel-feedback:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+}
+
+/* Delete button styling */
+.delete-feedback {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.delete-feedback:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
 }

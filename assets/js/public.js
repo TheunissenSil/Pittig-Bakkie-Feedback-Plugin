@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
             doc.body.addEventListener('mouseout', handleMouseOut);
             doc.body.addEventListener('click', handleElementClick);
 
-            FeedbackFetcher.fetchFeedback();
+            FeedbackHandler.fetchFeedback();
         };
 
         const disable = () => {
@@ -67,28 +67,32 @@ document.addEventListener('DOMContentLoaded', function () {
         const showAccessKeyForm = () => {
             const accessKeyForm = document.getElementById('access-key-form');
             const enableButton = document.getElementById('enable-feedback-mode');
-
+            const accessKeyMessage = document.getElementById('access-key-message');
+        
             // Show the form and hide the button
             enableButton.style.display = 'none';
             accessKeyForm.style.display = 'block';
-
+        
             // Add event listener to handle form submission
             accessKeyForm.addEventListener('submit', (e) => {
                 e.preventDefault(); // Prevent default form submission
-
+        
                 const accessKeyInput = document.getElementById('access-key-input');
                 const keyValue = accessKeyInput.value.trim();
-
+        
                 if (!keyValue) {
-                    alert('Please enter an access key.');
+                    accessKeyMessage.textContent = 'Please enter an access key.';
+                    accessKeyMessage.style.display = 'block';
                     return;
                 }
-
+        
                 validateAccessKey(keyValue, accessKeyForm, enableButton);
             });
         };
-
+        
         const validateAccessKey = (key, form, button) => {
+            const accessKeyMessage = document.getElementById('access-key-message');
+        
             fetch(ajaxUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -98,18 +102,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     _wpnonce: nonce,
                 }),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    if (data.success) {
-                        alert('Access granted!');
-                        form.style.display = 'none'; 
-                        button.style.display = 'block'; 
-                        enable(); 
-                    } else {
-                        alert(data.data || 'Invalid access key.');
-                    }
-                })
-                .catch((error) => console.error(error));
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    form.style.display = 'none'; 
+                    button.style.display = 'block'; 
+                    enable(); 
+                } else {
+                    accessKeyMessage.textContent = data.data || 'Invalid access key.';
+                    accessKeyMessage.style.display = 'block';
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                accessKeyMessage.textContent = 'An error occurred. Please try again.';
+                accessKeyMessage.style.display = 'block';
+            });
         };
 
         // Handles the hover over the elements
@@ -320,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     // FeedbackFetcher Module
-    const FeedbackFetcher = (() => {
+    const FeedbackHandler = (() => {
         const feedbackListContainer = document.getElementById('feedback-list');
 
         // Fetch feedback from the server
@@ -353,51 +361,193 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Render feedback items in the list
         const renderFeedbackList = (feedbackItems) => {
+            const feedbackListContainer = document.getElementById('feedback-list');
+        
             if (!feedbackItems.length) {
-                feedbackListContainer.innerHTML =
-                    '<p>No feedback available.</p>';
+                feedbackListContainer.innerHTML = '<p>No feedback available.</p>';
                 return;
             }
-
-            const listHtml = feedbackItems.map((item) =>
-                `<div class="feedback-item" data-id="${item.id}">
+        
+            const listHtml = feedbackItems.map((item) => `
+                <div class="feedback-item" data-id="${item.id}">
                     <div class="feedback-item-header">
                         ${item.username || 'Anonymous'}
                         <div class="feedback-date">${new Date(item.created_at).toLocaleDateString()}</div>
                     </div>
                     <div class="feedback-item-body">
-                        <p>${item.feedback_comment}</p>
+                        <p>
+                            <span class="editable-feedback">${item.feedback_comment}</span>
+                            ${item.username === pittigBakkieFeedbackPlugin.sessionUsername ? `
+                                <button class="edit-feedback" data-id="${item.id}"></button>
+                            ` : ''}
+                        </p>
                         <p class="feedback-meta">
                             Display-size: ${item.display_size || 'Unknown'}<br>
                             Status: ${item.status}
                         </p>
-                        ${
-                          item.admin_comment
-                            ? `<div class="admin-comment">${item.admin_comment}</div>`
-                            : ''
-                        }
+                        ${item.admin_comment ? `<div class="admin-comment">${item.admin_comment}</div>` : ''}
+                        ${item.username === pittigBakkieFeedbackPlugin.sessionUsername ? `
+                            <button class="delete-feedback" data-id="${item.id}">Delete</button>
+                        ` : ''}
                     </div>
-                 </div>`
-              ).join('');
+                </div>
+            `).join('');    
+        
+            feedbackListContainer.innerHTML = listHtml;
 
-              feedbackListContainer.innerHTML= listHtml;
+            // Add event listeners for accordion functionality
+            document.querySelectorAll('.feedback-item-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const body = header.nextElementSibling;
+                    body.style.display = body.style.display === 'block' ? 'none' : 'block';
+                });
+            });
+        
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.edit-feedback').forEach(button => {
+                button.addEventListener('click', handleEditFeedback);
+            });
+        
+            document.querySelectorAll('.delete-feedback').forEach(button => {
+                button.addEventListener('click', handleDeleteFeedback);
+            });
+        };  
+        
+        const showFeedbackMessage = (message, isError = false) => {
+            const feedbackMessage = document.getElementById('feedback-message');
+            feedbackMessage.textContent = message;
+            feedbackMessage.style.color = isError ? 'red' : 'green';
+            feedbackMessage.style.display = 'block';
+        
+            // Hide the message after 5 seconds
+            setTimeout(() => {
+                feedbackMessage.style.display = 'none';
+            }, 5000);
+        };
+        
+        // Handle edit feedback
+        const handleEditFeedback = (event) => {
+            const feedbackId = event.target.dataset.id;
+            const feedbackItem = document.querySelector(`.feedback-item[data-id="${feedbackId}"]`);
+            const feedbackComment = feedbackItem.querySelector('.editable-feedback');
+            const originalComment = feedbackComment.textContent;
+            const editButton = feedbackItem.querySelector('.edit-feedback');
+        
+            // Hide the edit button
+            editButton.style.display = 'none';
+        
+            // Create a textarea for editing
+            const textarea = document.createElement('textarea');
+            textarea.value = originalComment;
+            textarea.classList.add('edit-feedback-textarea');
+            textarea.style.minHeight = `${feedbackComment.offsetHeight + 20}px`;
+        
+            // Adjust the height of the textarea to fit its content
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight + 20}px`;
+        
+            // Replace the comment with the textarea
+            feedbackComment.replaceWith(textarea);
+        
+            // Create save and cancel buttons
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.classList.add('save-feedback');
+        
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.classList.add('cancel-feedback');
+        
+            textarea.after(saveButton, cancelButton);
+        
+            // Adjust the height of the textarea on input
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = `${textarea.scrollHeight + 20}px`;
+            });
+        
+            // Handle save action
+            saveButton.addEventListener('click', () => {
+                const newComment = textarea.value;
+        
+                fetch(ajaxUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        action: 'edit_feedback',
+                        id: feedbackId,
+                        feedback_comment: newComment,
+                        _wpnonce: nonce,
+                    }),
+                })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.success) {
+                        feedbackComment.textContent = newComment;
+                        textarea.replaceWith(feedbackComment);
+                        saveButton.remove();
+                        cancelButton.remove();
+                        editButton.style.display = 'block';
+                        showFeedbackMessage('Feedback updated successfully.');
+                    } else {
+                        showFeedbackMessage(data.data || 'Failed to update feedback.', true);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error updating feedback:', error);
+                    showFeedbackMessage('Failed to update feedback.', true);
+                });
+            });
+        
+            // Handle cancel action
+            cancelButton.addEventListener('click', () => {
+                textarea.replaceWith(feedbackComment);
+                saveButton.remove();
+                cancelButton.remove();
+                editButton.style.display = 'block';
+            });
+        };
+        
+        // Handle delete feedback
+        const handleDeleteFeedback = (event) => {
+            const feedbackId = event.target.dataset.id;
+        
+            if (!confirm('Are you sure you want to delete this feedback?')) {
+                return;
+            }
+        
+            fetch(ajaxUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    action: 'delete_feedback',
+                    id: feedbackId,
+                    _wpnonce: nonce,
+                }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    const feedbackItem = document.querySelector(`.feedback-item[data-id="${feedbackId}"]`);
+                    feedbackItem.remove();
+                    showFeedbackMessage('Feedback deleted successfully.');
+                } else {
+                    showFeedbackMessage(data.data || 'Failed to delete feedback.', true);
+                }
+            })
+            .catch((error) => {
+                console.error('Error deleting feedback:', error);
+                showFeedbackMessage('Failed to delete feedback.', true);
+            });
+        };
+                
+        return {fetchFeedback};
+    })();
 
-              // Add event listeners for accordion functionality
-              document.querySelectorAll('.feedback-item-header').forEach(header => {
-                  header.addEventListener('click', () => {
-                      const body = header.nextElementSibling;
-                      body.style.display = body.style.display === 'block' ? 'none' : 'block';
-                  });
-              });
-          };
-          
-          return {fetchFeedback};
-      })();
-
-      // Button Event Listeners 
-      document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.checkSessionAndEnable);  
-      document.getElementById("disable-feedback-mode").addEventListener("click", FeedbackMode.disable);
-      document.getElementById('scale-to-phone').addEventListener('click', () => {
+    // Button Event Listeners 
+    document.getElementById("enable-feedback-mode").addEventListener("click", FeedbackMode.checkSessionAndEnable);  
+    document.getElementById("disable-feedback-mode").addEventListener("click", FeedbackMode.disable);
+    document.getElementById('scale-to-phone').addEventListener('click', () => {
         PhoneMode.toggle();
-     });
+    });
 });

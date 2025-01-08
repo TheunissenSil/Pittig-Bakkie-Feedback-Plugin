@@ -27,10 +27,16 @@ class Frontend {
                 true
             );
 
+            // Start session if not already started
+            if (!session_id()) {
+                session_start();
+            }
+
             wp_localize_script('pittig-bakkie-feedback-plugin-frontend', 'pittigBakkieFeedbackPlugin', [
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('feedback_management_nonce'),
-            ]);            
+                'sessionUsername' => isset($_SESSION['feedback_username']) ? $_SESSION['feedback_username'] : ''
+            ]);             
         });
     }
 
