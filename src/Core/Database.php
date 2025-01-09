@@ -52,7 +52,7 @@ class Database {
         $sql = "CREATE TABLE $table_name (
             id INT AUTO_INCREMENT PRIMARY KEY,
             feedback_id INT NOT NULL,
-            suggestion_type VARCHAR(50) NOT NULL,
+            element_type VARCHAR(50) NOT NULL,
             suggestion_value TEXT NOT NULL,
             feedback_element VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

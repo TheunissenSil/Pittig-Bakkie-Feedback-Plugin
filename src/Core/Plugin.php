@@ -11,6 +11,7 @@ class Plugin {
         // Load the handler classes
         require_once plugin_dir_path(dirname(__FILE__)) . 'core/Handlers/FeedbackHandler.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'core/Handlers/AccessKeyHandler.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'core/Handlers/FeedbackSuggestionHandler.php';
 
         // Load the admin and frontend classes
         require_once plugin_dir_path(dirname(__FILE__)) . 'admin/Admin.php';
@@ -19,6 +20,7 @@ class Plugin {
         // Initialize the handler classes
         $feedback_handler = new \PittigBakkieFeedbackPlugin\Core\Handlers\FeedbackHandler();
         $access_key_handler = new \PittigBakkieFeedbackPlugin\Core\Handlers\AccessKeyHandler();
+        $feedback_suggestion_handler = new \PittigBakkieFeedbackPlugin\Core\Handlers\FeedbackSuggestionHandler();
 
         // Initialize the admin and frontend classes
         $admin = new \PittigBakkieFeedbackPlugin\Admin\Admin();

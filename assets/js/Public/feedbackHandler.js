@@ -10,7 +10,7 @@ const FeedbackHandler = (() => {
         config = cfg;
     };
 
-    // Show feedback message for errors or succes messages
+    // Show feedback message for errors or success messages
     const showFeedbackMessage = (message, isError = false) => {
         // Display the message
         const feedbackMessage = document.getElementById('feedback-message');
@@ -52,9 +52,6 @@ const FeedbackHandler = (() => {
         const feedbackTextarea = document.createElement('textarea');
         feedbackTextarea.classList.add('edit-feedback-textarea');
     
-        // Render the feedback suggestions
-        const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestions();
-    
         // Create save and cancel buttons
         const saveButton = document.createElement('button');
         saveButton.classList.add('save-feedback');
@@ -70,15 +67,31 @@ const FeedbackHandler = (() => {
         const feedbackMeta = document.createElement('p');
         feedbackMeta.classList.add('feedback-meta');
         feedbackMeta.innerHTML = `Display-size: ${displaySize}<br>Elementor ID: ${elementorId}`;
+
+        // Create the suggestion header
+        const suggestionHeader = document.createElement('h4');
+        suggestionHeader.classList.add('suggestion-title');
+        suggestionHeader.textContent = 'Verander content:';
+    
+        // Create the show suggestion button
+        const showSuggestionButton = document.createElement('button');
+        showSuggestionButton.classList.add('show-suggestion');
+        showSuggestionButton.textContent = 'Add Suggestion';
     
         // Insert the feedback form elements
         feedbackItemBody.appendChild(feedbackTitle);
         feedbackItemBody.appendChild(feedbackTextarea);
-        feedbackItemBody.insertAdjacentHTML('beforeend', suggestionsHtml);
+
+        const suggestionsEnabled = FeedbackSuggestionHandler.isSuggestionsEnabled(elementorId);
+        if (suggestionsEnabled) {
+            feedbackItemBody.appendChild(suggestionHeader);
+            feedbackItemBody.appendChild(showSuggestionButton);
+        }
+        
         feedbackItemBody.appendChild(feedbackMeta);
         feedbackItemBody.appendChild(saveButton);
         feedbackItemBody.appendChild(cancelButton);
-
+    
         feedbackItem.appendChild(feedbackItemHeader);
         feedbackItem.appendChild(feedbackItemBody);
     
@@ -109,6 +122,43 @@ const FeedbackHandler = (() => {
                 feedbackListContainer.appendChild(feedbackItem);
             }
         }
+
+        // Add event listener to show suggestion button
+        showSuggestionButton.addEventListener('click', () => {
+            // Check if suggestions are enabled
+            const suggestionsEnabled = FeedbackSuggestionHandler.isSuggestionsEnabled(elementorId);
+            if (suggestionsEnabled) {
+                const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestionInput(elementorId, true);
+                const suggestionBody = document.createElement('div');
+                suggestionBody.classList.add('suggestion-body');
+                suggestionBody.innerHTML = suggestionsHtml;
+
+                // Create the cancel suggestion button
+                const cancelSuggestionButton = document.createElement('button');
+                cancelSuggestionButton.classList.add('cancel-suggestion');
+                cancelSuggestionButton.textContent = 'Cancel Suggestion';
+
+                // Add the cancel suggestion button to the suggestion body
+                suggestionBody.appendChild(cancelSuggestionButton);
+
+                // Add the suggestion body to the feedback item body
+                feedbackItemBody.insertBefore(suggestionBody, feedbackMeta);
+                showSuggestionButton.style.display = 'none';
+
+                // Initialize TinyMCE if needed
+                const elementTypeClass = Array.from(target.classList).find(cls => cls.startsWith('elementor-widget-'));
+                if (elementTypeClass === "elementor-widget-text-editor") {
+                    FeedbackSuggestionHandler.initializeTinyMCE(elementorId);
+                }
+
+                // Add event listener to cancel suggestion button to remove the suggestion body
+                cancelSuggestionButton.addEventListener('click', () => {
+                    suggestionBody.remove();
+                    showSuggestionButton.style.display = 'block';
+                    FeedbackSuggestionHandler.destroyTinyMCE(elementorId);
+                });
+            }
+        });
     
         // Add event listeners for save and cancel buttons
         saveButton.addEventListener('click', () => {
@@ -118,11 +168,11 @@ const FeedbackHandler = (() => {
                 showFeedbackMessage('Please enter your feedback.', true);
                 return;
             }
-    
+        
             // Get the display size
             let currentPage = window.location.pathname;
             currentPage = currentPage.replace(/\/$/, ''); // Remove trailing slash if it exists
-    
+        
             // Save the feedback
             fetch(config.ajaxUrl, {
                 method: 'POST',
@@ -139,7 +189,15 @@ const FeedbackHandler = (() => {
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
+                    const feedbackId = data.data.feedback_id;
                     showFeedbackMessage('Feedback saved successfully.');
+        
+                    // Check if suggestions are filled in
+                    const suggestionBody = feedbackItemBody.querySelector('.suggestion-body');
+                    if (suggestionBody) {
+                        FeedbackSuggestionHandler.saveSuggestion(elementorId, feedbackId)
+                    }
+        
                     feedbackItem.remove();
                     FeedbackMode.removePermanentHighlight(target);
                     FeedbackMode.enable();
@@ -156,8 +214,8 @@ const FeedbackHandler = (() => {
     
         // Handle cancel action
         cancelButton.addEventListener('click', () => {
-            feedbackItem.remove();
             FeedbackMode.removePermanentHighlight(target);
+            feedbackItem.remove();
             FeedbackMode.enable();
         });
     };
@@ -269,6 +327,8 @@ const FeedbackHandler = (() => {
             if (data.success) {
                 const feedbackItem = document.querySelector(`.feedback-item[data-id="${feedbackId}"]`);
                 feedbackItem.remove();
+                console.log(data);
+                FeedbackMode.enable();
                 showFeedbackMessage('Feedback deleted successfully.');
             } else {
                 showFeedbackMessage(data.data || 'Failed to delete feedback.', true);

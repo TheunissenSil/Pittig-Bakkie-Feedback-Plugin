@@ -134,7 +134,7 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     position: fixed;
     right: -350px;
     top: 0;
-    width: 300px;
+    width: 350px;
     height: 100vh; 
     background-color: var(--primary-color);
     font-family: 'Poppins';
@@ -204,7 +204,7 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
 /* Feedback item styles */
 .feedback-sidebar #feedback-list {
     color: var(--text-color-light);
-    height: 100%;
+    height: 90%;
     padding-right: 10px;
     overflow-y: scroll;
 }
@@ -368,4 +368,8 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     position: absolute;
     top: 5px;
     right: 0px;
+}
+
+.suggestion-hidden {
+    display: none;
 }

@@ -1,6 +1,7 @@
 import PageScaler from './pageScaler.js';
 import PhoneMode from './phoneMode.js';
 import FeedbackHandler from './feedbackHandler.js';
+import FeedbackSuggestionHandler from './feedbackSuggestionHandler.js';
 
 // Feedback mode module
 const FeedbackMode = (() => {
@@ -22,6 +23,11 @@ const FeedbackMode = (() => {
         const scaleToPhoneButton = document.getElementById('scale-to-phone');
         if (scaleToPhoneButton.dataset.phoneMode !== 'true') {
             PageScaler.scale();
+        }
+
+        // Remove permanent highlight
+        if (permanentlyHighlightedElement) {
+            removePermanentHighlight(permanentlyHighlightedElement);
         }
 
         // Add event listeners for feedbackmode
@@ -243,6 +249,12 @@ const FeedbackMode = (() => {
         const addFeedbackItem = document.querySelector('.feedback-item.new-feedback');
         if (addFeedbackItem) {
             addFeedbackItem.remove();
+        }
+
+        // Remove tinymce fields if exist
+        const tinyMcefields = document.querySelectorAll(`.feedback-item[data-elementor-id="${element.dataset.id}"] .suggestion-text-editor`);
+        if (tinyMcefields) {
+            FeedbackSuggestionHandler.destroyTinyMCE(element.dataset.id);
         }
         
         addEventListeners();

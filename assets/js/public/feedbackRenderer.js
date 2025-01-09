@@ -85,7 +85,10 @@ const feedbackRenderer = (() => {
                                 <button class="edit-feedback" data-id="${item.id}"></button>
                             ` : ''}
                         </div>
-                        ${FeedbackSuggestionHandler.renderSuggestions()}
+                        <h4 class="suggestion-title">Verander content:</h4>
+                        <div class="suggestion-body">
+                            ${FeedbackSuggestionHandler.renderSuggestionBlock(item.elementor_id)}
+                        </div>
                         <p class="feedback-meta">
                             Username: ${item.username || 'Anonymous'}<br>
                             Display-size: ${item.display_size || 'Unknown'}<br>

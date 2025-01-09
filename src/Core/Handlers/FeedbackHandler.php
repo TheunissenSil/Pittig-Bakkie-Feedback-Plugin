@@ -4,12 +4,14 @@ namespace PittigBakkieFeedbackPlugin\Core\Handlers;
 
 class FeedbackHandler {
     private $table_name;
+    private $suggestions_table_name;
 
     public function __construct() {
         global $wpdb;
 
-        // Set table name
+        // Set table names
         $this->table_name = $wpdb->prefix . 'pittig_bakkie_feedback';
+        $this->suggestions_table_name = $wpdb->prefix . 'pittig_bakkie_feedback_suggestions';
 
         // Add AJAX actions
         add_action('wp_ajax_get_feedback', [$this, 'get_feedback']);
@@ -117,7 +119,7 @@ class FeedbackHandler {
         }
     }
 
-    // Deleete the feedback
+    // Delete the feedback
     public function delete_feedback() {
         $this->validate_nonce();
     
@@ -149,6 +151,13 @@ class FeedbackHandler {
             return;
         }
     
+        // Delete the feedback suggestions
+        $wpdb->delete(
+            $this->suggestions_table_name,
+            ['feedback_id' => $feedback_id],
+            ['%d']
+        );
+
         // Delete the feedback
         $deleted = $wpdb->delete(
             $this->table_name,
@@ -157,7 +166,7 @@ class FeedbackHandler {
         );
     
         if ($deleted) {
-            wp_send_json_success(__('Feedback deleted successfully.', 'pittig-bakkie-feedback-plugin'));
+            wp_send_json_success(__('Feedback and associated suggestions deleted successfully.', 'pittig-bakkie-feedback-plugin'));
         } else {
             wp_send_json_error(__('Failed to delete feedback.', 'pittig-bakkie-feedback-plugin'));
         }
@@ -202,7 +211,8 @@ class FeedbackHandler {
         );
     
         if ($inserted) {
-            wp_send_json_success(__('Feedback saved successfully.', 'pittig-bakkie-feedback-plugin'));
+            $feedback_id = $wpdb->insert_id;
+            wp_send_json_success(['feedback_id' => $feedback_id, 'message' => __('Feedback saved successfully.', 'pittig-bakkie-feedback-plugin')]);
         } else {
             wp_send_json_error(__('Failed to save feedback.', 'pittig-bakkie-feedback-plugin'));
         }
