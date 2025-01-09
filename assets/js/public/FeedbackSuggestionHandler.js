@@ -4,50 +4,39 @@ const FeedbackSuggestionHandler = (() => {
         config = cfg;
     };
 
-    const possibleElementTypes = ["elementor-widget-text-editor", "elementor-widget-image"];
-
-    const renderSuggestionBlock = (elementId) => {
-        // Check if the element type is supported
-        if (isSuggestionsEnabled(elementId)) {
-            // Check if there already exists a suggestion
-            fetchfeedbackSuggestions(elementId)
-                .then((data) => {
-                    if (data.success) {
-                        // Render the suggestion block
-                        //console.log("render existing suggestions")
-                    } else {
-                        // Render the add suggestion button
-                        //console.log("render add suggestion button")
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error fetching feedback:', error);
-                    return '';
-                });
-        }
-    
-        return '';
-    };  
-
-    const isSuggestionsEnabled = (elementId) => {
-        const element = document.querySelector(`[data-id="${elementId}"]`);
-        if (!element) {
-            console.error(`Element with ID ${elementId} not found.`);
-            return false;
-        }
-    
-        const elementTypeClass = Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-'));
-        if (!elementTypeClass) {
-            console.log("Element type not found for ID: ", elementId);
-        }
-    
-        return possibleElementTypes.includes(elementTypeClass);
+    const renderSuggestion = (elementId, feedbackId) => {
+        return fetchfeedbackSuggestions(elementId)
+            .then((data) => {
+                if (data.success && data.data.length > 0) {
+                    // Render existing suggestions
+                    return data.data.map(suggestion => {
+                        return `
+                            <div class="suggestion-body">
+                                ${suggestion.suggestion_value}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    // Render the button to add a new suggestion
+                    return `
+                        <button class="show-suggestion" data-elementor-id="${elementId}" data-feedback-id="${feedbackId}">Verander content suggestie</button>
+                    `;
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching suggestions:', error);
+                return '<p>Error loading suggestions.</p>';
+            });
     };
 
     const renderSuggestionInput = (elementId, isNew = false) => {
         let suggestionContent = '';
         const element = document.querySelector(`[data-id="${elementId}"]`);
-        const elementTypeClass = Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-'));
+        
+        // Check what the data-element_type of the element is
+        const elementTypeClass = element.dataset.element_type === 'widget' 
+            ? `elementor-widget-${element.dataset.widgetType.split('.')[0]}` 
+            : element.dataset.element_type;
 
         switch (elementTypeClass) {
             case 'elementor-widget-text-editor':
@@ -61,7 +50,9 @@ const FeedbackSuggestionHandler = (() => {
                 `;
                 break;
             default:
-                suggestionContent = `<div class="suggestion-default">Unsupported element type</div>`;
+                suggestionContent = `
+                    <textarea name="suggestion_value" id="suggestion-default-${elementId}" class="suggestion-default" style="height: 100px;"></textarea>
+                `;
                 break;
         }
 
@@ -84,11 +75,8 @@ const FeedbackSuggestionHandler = (() => {
 
         let content = '';
 
-        console.log("fillSuggestionContent", elementId, elementTypeClass);
-
         switch (elementTypeClass) {
             case 'elementor-widget-text-editor':
-                console.log("text editor");
                 content = element.innerHTML;
                 const textarea = document.getElementById(`suggestion-text-editor-${elementId}`);
                 if (textarea) {
@@ -99,7 +87,6 @@ const FeedbackSuggestionHandler = (() => {
                 }
                 break;
             case 'elementor-widget-image':
-                console.log("image");
                 const img = element.querySelector('img');
                 if (img) {
                     content = img.src;
@@ -114,7 +101,13 @@ const FeedbackSuggestionHandler = (() => {
                 }
                 break;
             default:
-                console.error('Unsupported element type:', elementTypeClass);
+                content = element.innerText || element.textContent;
+                const inputDefault = document.getElementById(`suggestion-default-${elementId}`);
+                if (inputDefault) {
+                    inputDefault.value = content;
+                } else {
+                    console.error(`Input field with ID suggestion-default-${elementId} not found.`);
+                }
                 break;
         }
     };
@@ -124,17 +117,20 @@ const FeedbackSuggestionHandler = (() => {
         const element = document.querySelector(`[data-id="${elementId}"]`);
         if (!element) {
             console.error(`Element with ID ${elementId} not found.`);
-            return;
+            return { success: false, data: 'Element not found' };
         }
-    
-        const elementTypeClass = Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-'));
+
+        const elementTypeClass = element.dataset.element_type === 'widget' 
+            ? `elementor-widget-${element.dataset.widgetType.split('.')[0]}` 
+            : element.dataset.element_type;
+
         if (!elementTypeClass) {
             console.error('Element type not found for ID:', elementId);
-            return;
+            return { success: false, data: 'Element type not found' };
         }
-    
+
         let suggestionValue = '';
-    
+
         switch (elementTypeClass) {
             case 'elementor-widget-text-editor':
                 const editor = tinymce.get(`suggestion-text-editor-${elementId}`);
@@ -157,10 +153,13 @@ const FeedbackSuggestionHandler = (() => {
                 }
                 break;
             default:
-                console.error('Unsupported element type:', elementTypeClass);
-                return;
+                const inputDefault = document.getElementById(`suggestion-default-${elementId}`);
+                if (inputDefault) {
+                    suggestionValue = inputDefault.value;
+                }
+                break;
         }
-    
+
         // Fetch request to save the suggestion
         return fetch(config.ajaxUrl, {
             method: 'POST',
@@ -179,13 +178,15 @@ const FeedbackSuggestionHandler = (() => {
         .then((response) => response.json())
         .then((data) => {
             if (data.success) {
-                console.log('Suggestion saved successfully.');
+                return { success: true };
             } else {
                 console.error('Failed to save suggestion:', data.data);
+                return { success: false, data: data.data };
             }
         })
         .catch((error) => {
             console.error('Error saving suggestion:', error);
+            return { success: false, data: error.message };
         });
     };
 
@@ -194,7 +195,7 @@ const FeedbackSuggestionHandler = (() => {
         formData.append('action', 'upload_image');
         formData.append('image', file);
         formData.append('_wpnonce', config.nonce);
-    
+
         return fetch(config.ajaxUrl, {
             method: 'POST',
             body: formData,
@@ -244,7 +245,7 @@ const FeedbackSuggestionHandler = (() => {
         .then((response) => response.json());
     };
 
-    return { saveSuggestion, initializeTinyMCE, destroyTinyMCE, isSuggestionsEnabled, renderSuggestionInput, renderSuggestionBlock, init };
+    return { saveSuggestion, initializeTinyMCE, destroyTinyMCE, renderSuggestion, renderSuggestionInput, init };
 })();
 
 export default FeedbackSuggestionHandler;

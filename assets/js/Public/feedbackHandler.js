@@ -47,7 +47,7 @@ const FeedbackHandler = (() => {
     
         // Create the feedback form elements
         const feedbackTitle = document.createElement('h4');
-        feedbackTitle.textContent = 'Opmerking:';
+        feedbackTitle.textContent = 'Verander content:';
     
         const feedbackTextarea = document.createElement('textarea');
         feedbackTextarea.classList.add('edit-feedback-textarea');
@@ -76,17 +76,16 @@ const FeedbackHandler = (() => {
         // Create the show suggestion button
         const showSuggestionButton = document.createElement('button');
         showSuggestionButton.classList.add('show-suggestion');
-        showSuggestionButton.textContent = 'Add Suggestion';
+        showSuggestionButton.textContent = 'Verander content suggestie';
     
         // Insert the feedback form elements
         feedbackItemBody.appendChild(feedbackTitle);
         feedbackItemBody.appendChild(feedbackTextarea);
 
-        const suggestionsEnabled = FeedbackSuggestionHandler.isSuggestionsEnabled(elementorId);
-        if (suggestionsEnabled) {
-            feedbackItemBody.appendChild(suggestionHeader);
-            feedbackItemBody.appendChild(showSuggestionButton);
-        }
+        
+        feedbackItemBody.appendChild(suggestionHeader);
+        feedbackItemBody.appendChild(showSuggestionButton);
+        
         
         feedbackItemBody.appendChild(feedbackMeta);
         feedbackItemBody.appendChild(saveButton);
@@ -125,39 +124,39 @@ const FeedbackHandler = (() => {
 
         // Add event listener to show suggestion button
         showSuggestionButton.addEventListener('click', () => {
-            // Check if suggestions are enabled
-            const suggestionsEnabled = FeedbackSuggestionHandler.isSuggestionsEnabled(elementorId);
-            if (suggestionsEnabled) {
-                const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestionInput(elementorId, true);
-                const suggestionBody = document.createElement('div');
-                suggestionBody.classList.add('suggestion-body');
-                suggestionBody.innerHTML = suggestionsHtml;
+            const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestionInput(elementorId, true);
+            const suggestionBody = document.createElement('div');
+            suggestionBody.classList.add('suggestion-body');
+            suggestionBody.innerHTML = suggestionsHtml;
 
-                // Create the cancel suggestion button
-                const cancelSuggestionButton = document.createElement('button');
-                cancelSuggestionButton.classList.add('cancel-suggestion');
-                cancelSuggestionButton.textContent = 'Cancel Suggestion';
+            // Create the cancel suggestion button
+            const cancelSuggestionButton = document.createElement('button');
+            cancelSuggestionButton.classList.add('cancel-suggestion');
+            cancelSuggestionButton.textContent = 'Cancel Suggestion';
 
-                // Add the cancel suggestion button to the suggestion body
-                suggestionBody.appendChild(cancelSuggestionButton);
+            // Add the cancel suggestion button to the suggestion body
+            suggestionBody.appendChild(cancelSuggestionButton);
 
-                // Add the suggestion body to the feedback item body
-                feedbackItemBody.insertBefore(suggestionBody, feedbackMeta);
-                showSuggestionButton.style.display = 'none';
+            // Add the suggestion body to the feedback item body
+            feedbackItemBody.insertBefore(suggestionBody, feedbackMeta);
+            showSuggestionButton.style.display = 'none';
 
-                // Initialize TinyMCE if needed
-                const elementTypeClass = Array.from(target.classList).find(cls => cls.startsWith('elementor-widget-'));
-                if (elementTypeClass === "elementor-widget-text-editor") {
-                    FeedbackSuggestionHandler.initializeTinyMCE(elementorId);
-                }
+            // Initialize TinyMCE if needed
+            const elementTypeClass = element.dataset.element_type === 'widget' 
+                ? Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-')) 
+                : element.dataset.element_type;
 
-                // Add event listener to cancel suggestion button to remove the suggestion body
-                cancelSuggestionButton.addEventListener('click', () => {
-                    suggestionBody.remove();
-                    showSuggestionButton.style.display = 'block';
-                    FeedbackSuggestionHandler.destroyTinyMCE(elementorId);
-                });
+            if (!elementTypeClass) {
+                console.error('Element type not found for ID:', elementId);
+                return { success: false, data: 'Element type not found' };
             }
+
+            // Add event listener to cancel suggestion button to remove the suggestion body
+            cancelSuggestionButton.addEventListener('click', () => {
+                suggestionBody.remove();
+                showSuggestionButton.style.display = 'block';
+                FeedbackSuggestionHandler.destroyTinyMCE(elementorId);
+            });
         });
     
         // Add event listeners for save and cancel buttons
@@ -200,7 +199,6 @@ const FeedbackHandler = (() => {
         
                     feedbackItem.remove();
                     FeedbackMode.removePermanentHighlight(target);
-                    FeedbackMode.enable();
                     feedbackRenderer.fetchFeedback();
                 } else {
                     showFeedbackMessage(data.data || 'Failed to save feedback.', true);
@@ -216,7 +214,6 @@ const FeedbackHandler = (() => {
         cancelButton.addEventListener('click', () => {
             FeedbackMode.removePermanentHighlight(target);
             feedbackItem.remove();
-            FeedbackMode.enable();
         });
     };
     
@@ -327,9 +324,12 @@ const FeedbackHandler = (() => {
             if (data.success) {
                 const feedbackItem = document.querySelector(`.feedback-item[data-id="${feedbackId}"]`);
                 feedbackItem.remove();
-                console.log(data);
-                FeedbackMode.enable();
                 showFeedbackMessage('Feedback deleted successfully.');
+
+                // Remove the permanent highlight
+                const elementorId = event.srcElement.dataset.elementorId;
+                const target = document.querySelector(`.elementor-element[data-id="${elementorId}"]`);
+                FeedbackMode.removePermanentHighlight(target);
             } else {
                 showFeedbackMessage(data.data || 'Failed to delete feedback.', true);
             }
@@ -340,7 +340,7 @@ const FeedbackHandler = (() => {
         });
     };
             
-    return { init, createFeedback, handleEditFeedback, handleDeleteFeedback };
+    return { init, createFeedback, handleEditFeedback, handleDeleteFeedback, showFeedbackMessage };
 })();
 
 export default FeedbackHandler;
