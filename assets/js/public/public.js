@@ -1,7 +1,8 @@
-import FeedbackMode from './Public/feedbackMode.js';
-import PageScaler from './Public/pageScaler.js';
-import PhoneMode from './Public/phoneMode.js';
-import FeedbackHandler from './Public/feedbackHandler.js';
+import FeedbackMode from './feedbackMode.js';
+import PageScaler from './pageScaler.js';
+import PhoneMode from './phoneMode.js';
+import feedbackRenderer from './feedbackRenderer.js';
+import FeedbackHandler from './feedbackHandler.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     // Configuration
@@ -13,8 +14,11 @@ document.addEventListener('DOMContentLoaded', function () {
         isAdmin: pittigBakkieFeedbackPlugin.isAdmin
     };
 
-    // Initialize the feedback list
+    // Initialize the feedback handler
     FeedbackHandler.init(config);
+
+    // Initialize the feedback list
+    feedbackRenderer.init(config);
 
     // Initialize FeedbackMode with config
     FeedbackMode.init(config);

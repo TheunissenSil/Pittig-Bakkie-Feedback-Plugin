@@ -23,7 +23,7 @@ class Admin {
             // Enqueue script for Feedback page
             wp_enqueue_script(
                 'pittig-bakkie-feedback-plugin-admin-feedback',
-                plugin_dir_url(__FILE__) . '../../assets/js/admin-feedback.js',
+                plugin_dir_url(__FILE__) . '../../assets/js/admin/admin-feedback.js',
                 [],
                 '1.0.0',
                 true
@@ -46,7 +46,7 @@ class Admin {
             // Enqueue script for Access Keys page
             wp_enqueue_script(
                 'pittig-bakkie-feedback-plugin-admin-access-keys',
-                plugin_dir_url(__FILE__) . '../../assets/js/admin-access-keys.js',
+                plugin_dir_url(__FILE__) . '../../assets/js/admin/admin-access-keys.js',
                 [],
                 '1.0.0',
                 true

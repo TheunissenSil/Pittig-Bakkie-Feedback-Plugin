@@ -5,6 +5,7 @@
             <img src="<?php echo esc_url(plugins_url('assets/img/feedback.png', dirname(__DIR__, 3) . '/my-feedback-plugin.php')); ?>" alt="<?php esc_attr_e('Feedback Icon', 'pittig-bakkie-feedback-plugin'); ?>">
         </div>
         <div class="feedback-sidebar-body">
+            <h2>Feedback:</h2>
             <div id="feedback-message" class="feedback-message" style="display: none;"></div>
             <div id="feedback-list"></div>
         </div>

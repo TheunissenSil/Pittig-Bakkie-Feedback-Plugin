@@ -1,6 +1,7 @@
 import FeedbackMode from './feedbackMode.js';
 import PageScaler from './pageScaler.js';
 
+// Phone mode module
 const PhoneMode = (() => {
     const enablePhoneMode = () => {
         // Make sure the sidebar and admin bar are not included in the iframe
@@ -99,6 +100,7 @@ const PhoneMode = (() => {
         scaleToPhoneButton.dataset.phoneMode = 'false';
     };
 
+    // Toggle phone mode
     const togglePhoneMode = () => {
         const scaleToPhoneButton = document.getElementById('scale-to-phone');
         let isPhoneMode = scaleToPhoneButton.dataset.phoneMode === 'true';

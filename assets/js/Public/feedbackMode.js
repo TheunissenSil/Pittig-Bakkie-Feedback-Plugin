@@ -2,12 +2,13 @@ import PageScaler from './pageScaler.js';
 import PhoneMode from './phoneMode.js';
 import FeedbackHandler from './feedbackHandler.js';
 
+// Feedback mode module
 const FeedbackMode = (() => {
     // Configuration
     let config;
     const init = (cfg) => {
         config = cfg;
-        setupFeedbackAccordion();
+        checkFromAdminPage();
     };
 
     // Element that is permanently highlighted
@@ -24,18 +25,14 @@ const FeedbackMode = (() => {
         }
 
         // Add event listeners for feedbackmode
-        doc.body.addEventListener('mouseover', handleMouseOver);
-        doc.body.addEventListener('mouseout', handleMouseOut);
-        doc.body.addEventListener('click', handleElementClick);
+        addEventListeners(doc);
     };
 
     const disable = () => {
         document.body.classList.remove('feedback-mode-active');
 
         // Remove event listeners for feedbackmode
-        document.body.removeEventListener('mouseover', handleMouseOver);
-        document.body.removeEventListener('mouseout', handleMouseOut);
-        document.body.removeEventListener('click', handleElementClick);
+        removeEventListeners();
 
         // Remove permanent highlight
         if (permanentlyHighlightedElement) {
@@ -50,6 +47,20 @@ const FeedbackMode = (() => {
 
         PageScaler.reset();
     };
+
+    // remove event listeners
+    const removeEventListeners = () => {
+        document.body.removeEventListener('mouseover', handleMouseOver);
+        document.body.removeEventListener('mouseout', handleMouseOut);
+        document.body.removeEventListener('click', handleElementClick);
+    };
+
+    // add event listeners
+    const addEventListeners = (doc = document) => {
+        doc.body.addEventListener('mouseover', handleMouseOver);
+        doc.body.addEventListener('mouseout', handleMouseOut);
+        doc.body.addEventListener('click', handleElementClick);
+    }
 
     // Check the session and enable the feedback mode
     const checkSessionAndEnable = () => {
@@ -154,37 +165,14 @@ const FeedbackMode = (() => {
     // Handles the click on elements and adds a permanent highlight
     const handleElementClick = (event) => {
         const target = event.target.closest('.elementor-element');
-
-        // If the target is null or there is already a permanently highlighted element, return
-        if (!target || permanentlyHighlightedElement) return;
     
-        // Check if the element has existing feedback items
-        const elementorId = target.dataset.id;
-        const existingFeedbackItems = document.querySelectorAll(`.feedback-item[data-elementor-id="${elementorId}"]`);
-        const userFeedbackExists = Array.from(existingFeedbackItems).some(item => item.classList.contains('editable-feedback'));
-    
-        // If the user feedback exists, scroll to the last feedback item and show the feedback accordion
-        if (existingFeedbackItems.length > 0) {
-            existingFeedbackItems.forEach(item => {
-                item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                item.querySelector('.feedback-item-body').style.display = 'block';
-            });
-            addPermanentHighlight(target);
-    
-            // If the user does not already has his own feedback show the add feedback accordion
-            if (!userFeedbackExists) {
-                FeedbackHandler.createFeedback(target, existingFeedbackItems[existingFeedbackItems.length - 1]);
-            }
-        } else {
-            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
-            event.preventDefault();
-            event.stopPropagation();
-    
-            addPermanentHighlight(target);
-    
-            FeedbackHandler.createFeedback(target);
+        // If no target is found, return early
+        if (!target) {
+            return;
         }
+    
+        event.stopPropagation();
+        addPermanentHighlight(target);
     };
 
     // Adds a permanent highlight to the element
@@ -193,6 +181,31 @@ const FeedbackMode = (() => {
         if (!target || permanentlyHighlightedElement) {
             removePermanentHighlight(permanentlyHighlightedElement);
         }
+
+        // Remove the event listeners
+        removeEventListeners();
+
+        // Check if the element has existing feedback items
+        const elementorId = target.dataset.id;
+        const existingFeedbackItems = document.querySelectorAll(`.feedback-item[data-elementor-id="${elementorId}"]`);
+        const userFeedbackExists = Array.from(existingFeedbackItems).some(item => item.classList.contains('editable-feedback'));
+    
+        // If the user feedback exists, scroll to the last feedback item and show the feedback accordion
+        if (existingFeedbackItems.length > 0) {
+            existingFeedbackItems.forEach(item => {
+                item.querySelector('.feedback-item-body').style.display = 'block';
+            });
+    
+            // If the user does not already has his own feedback show the add feedback accordion
+            if (!userFeedbackExists) {
+                FeedbackHandler.createFeedback(target, existingFeedbackItems[existingFeedbackItems.length - 1]);
+            }
+        } else {
+            FeedbackHandler.createFeedback(target);
+        }
+
+        // Scroll the target into view
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
         // Add the permanent highlight
         permanentlyHighlightedElement = target;
@@ -205,27 +218,12 @@ const FeedbackMode = (() => {
         closeButton.addEventListener('click', (e) => {
             e.stopPropagation();
             removePermanentHighlight(target);
-            enable(); 
         });
 
         target.appendChild(closeButton);
 
         document.body.removeEventListener('mouseover', handleMouseOver);
     }
-
-    // Open the feedback accordion
-    const openFeedbackAccordion = (targetElement) => {
-        const feedbackItemBodies = document.querySelectorAll(`.feedback-item[data-elementor-id="${targetElement}"] .feedback-item-body`);
-        console.log(feedbackItemBodies);
-        feedbackItemBodies.forEach(body => {
-            body.style.display = 'block';
-        });
-    };
-
-    // Clears all outlines
-    const clearOutlines = () => {
-        document.querySelectorAll('.outlined').forEach((el) => el.classList.remove('outlined'));
-    };
 
     // Removes the permanent highlight
     const removePermanentHighlight = (element) => {
@@ -246,22 +244,47 @@ const FeedbackMode = (() => {
         if (addFeedbackItem) {
             addFeedbackItem.remove();
         }
+        
+        addEventListeners();
     };
 
-    // Check if ondomlead setup the feedback accordion opening
-    const setupFeedbackAccordion = async () => {
+    // Clears all outlines
+    const clearOutlines = () => {
+        document.querySelectorAll('.outlined').forEach((el) => el.classList.remove('outlined'));
+    };
+
+    // Check if the user is coming from the admin page.
+    const checkFromAdminPage = async () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const targetElementIs = urlParams.get('targetElementIs');
+        const targetElementId = urlParams.get('targetElementIs');
     
-        if (targetElementIs) {
-            const targetElement = document.querySelector(`.elementor-element[data-id="${targetElementIs}"]`);
+        // If the targetElementId is present in the URL, enable the feedback mode
+        if (targetElementId) {
+            await checkSessionAndEnable();
+            const targetElement = document.querySelector(`.elementor-element[data-id="${targetElementId}"]`);
+
+            // If the target element is found, start observing for the items in the feedback sidebar
             if (targetElement) {
-                await checkSessionAndEnable();
-                setTimeout(() => {
-                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    openFeedbackAccordion(targetElementIs);
-                    addPermanentHighlight(targetElement);
-                }, 1000);
+                const observer = new MutationObserver((mutations, obs) => {
+
+                    // When feedabck items are loaded add the permanent highlight
+                    const existingFeedbackItems = document.querySelectorAll(`.feedback-item[data-elementor-id="${targetElementId}"]`);
+                    if (existingFeedbackItems.length > 0) {
+                        obs.disconnect(); // Stop observing once feedback items are loaded
+                        addPermanentHighlight(targetElement);
+    
+                        // Remove the variable from the URL
+                        urlParams.delete('targetElementIs');
+                        let newUrl = window.location.pathname;
+                        if (urlParams.toString()) {
+                            newUrl += `?${urlParams.toString()}`;
+                        }
+                        history.replaceState(null, '', newUrl);
+                    }
+                });
+    
+                // Start observing the document for child list changes
+                observer.observe(document.body, { childList: true, subtree: true });
             }
         }
     };

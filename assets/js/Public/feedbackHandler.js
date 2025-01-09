@@ -1,144 +1,18 @@
 import FeedbackMode from './feedbackMode.js';
+import feedbackRenderer from './feedbackRenderer.js';
+import FeedbackSuggestionHandler from './feedbackSuggestionHandler.js';
 
 // Feedbackhandler Module
 const FeedbackHandler = (() => {
+    // Configuration 
     let config;
-
     const init = (cfg) => {
         config = cfg;
-        fetchFeedback();
     };
 
-    const fetchFeedback = () => {
-        fetch(config.ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                action: 'get_feedback',
-                _wpnonce: config.nonce, 
-            })
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                renderFeedbackList(data.data);
-            } else {
-                feedbackListContainer.innerHTML =
-                    '<p>' + (data.data || 'No feedback available.') + '</p>';
-            }
-        })
-        .catch((error) => {
-            console.error('Error fetching feedback:', error);
-            feedbackListContainer.innerHTML =
-                '<p>Error loading feedback.</p>';
-        });
-    };
-
-    const renderFeedbackList = (feedbackItems) => {
-        const feedbackListContainer = document.getElementById('feedback-list');
-        const elementorElements = Array.from(document.querySelectorAll('.elementor-element'));
-
-        if (!feedbackItems.length) {
-            feedbackListContainer.innerHTML = '<p>No feedback available.</p>';
-            return;
-        }
-
-        const elementPositions = {};
-        elementorElements.forEach((el, index) => {
-            elementPositions[el.dataset.id] = index;
-        });
-
-        feedbackItems.sort((a, b) => {
-            const posA = elementPositions[a.elementor_id];
-            const posB = elementPositions[b.elementor_id];
-            return posA - posB;
-        });
-
-        const listHtml = feedbackItems.map((item) => `
-            <div class="feedback-item ${item.username === config.sessionUsername ? 'editable-feedback' : ''}" data-id="${item.id}" data-elementor-id="${item.elementor_id}">
-                <div class="feedback-item-header">
-                    ${item.username || 'Anonymous'}
-                    <div class="feedback-date">${new Date(item.created_at).toLocaleDateString()}</div>
-                </div>
-                <div class="feedback-item-body">
-                    <p>
-                        <span class="editable-feedback">${item.feedback_comment}</span>
-                        ${item.username === config.sessionUsername ? `
-                            <button class="edit-feedback" data-id="${item.id}"></button>
-                        ` : ''}
-                    </p>
-                    <p class="feedback-meta">
-                        Display-size: ${item.display_size || 'Unknown'}<br>
-                        Status: ${item.status}
-                    </p>
-                    ${item.admin_comment ? `
-                        <div class="admin-comment">
-                            ${item.admin_comment}
-                        </div>
-                    ` : ''}
-                    ${item.username === config.sessionUsername ? `
-                        <button class="delete-feedback" data-id="${item.id}">Delete</button>
-                    ` : ''}
-                </div>
-            </div>
-        `).join('');    
-
-        feedbackListContainer.innerHTML = listHtml;
-
-        // Add event listeners for accordion functionality
-        document.querySelectorAll('.feedback-item-header').forEach(header => {
-            header.addEventListener('click', () => {
-                // Remove the new feedback item if it exists
-                const addFeedbackItem = document.querySelector('.feedback-item.new-feedback');
-                if (addFeedbackItem) {
-                    addFeedbackItem.remove();
-                }
-    
-                // Toggle the accordion
-                const body = header.nextElementSibling;
-                const isOpen = body.style.display === 'block';
-    
-                // Close any open accordion
-                document.querySelectorAll('.feedback-item-body').forEach(body => {
-                    if (body.style.display === 'block') {
-                        body.style.display = 'none';
-
-                        // Remove the permanent highlight
-                        const elementorId = body.closest('.feedback-item').dataset.elementorId;
-                        const targetElement = document.querySelector(`.elementor-element[data-id="${elementorId}"]`);
-                        if (targetElement) {
-                            FeedbackMode.removePermanentHighlight(targetElement);
-                        }
-                    }
-                });
-    
-                // Open the clicked accordion
-                if (!isOpen) {
-                    // Scroll to the elementor element and highlight it
-                    const elementorId = header.closest('.feedback-item').dataset.elementorId;
-                    const targetElement = document.querySelector(`.elementor-element[data-id="${elementorId}"]`);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        FeedbackMode.addPermanentHighlight(targetElement);
-                    }
-                    const body = header.nextElementSibling;
-                    body.style.display = 'block';
-                }
-            });
-        });
-    
-        // Add event listeners for edit and delete buttons
-        document.querySelectorAll('.edit-feedback').forEach(button => {
-            button.addEventListener('click', handleEditFeedback);
-        });
-        document.querySelectorAll('.delete-feedback').forEach(button => {
-            button.addEventListener('click', handleDeleteFeedback);
-        });
-    };
-    
+    // Show feedback message for errors or succes messages
     const showFeedbackMessage = (message, isError = false) => {
+        // Display the message
         const feedbackMessage = document.getElementById('feedback-message');
         feedbackMessage.textContent = message;
         feedbackMessage.style.color = isError ? 'red' : 'green';
@@ -151,29 +25,37 @@ const FeedbackHandler = (() => {
     };
 
     const createFeedback = (target, existingFeedbackItem = null) => {
-        // Create a new feedback item
+        // Get the feedback list container
         const feedbackListContainer = document.getElementById('feedback-list');
         const elementorId = target.dataset.id;
     
+        // Create a new feedback item
         const feedbackItem = document.createElement('div');
         feedbackItem.classList.add('feedback-item');
         feedbackItem.classList.add('new-feedback');
         feedbackItem.dataset.elementorId = elementorId;
     
+        // Create the feedback item header 
         const feedbackItemHeader = document.createElement('div');
         feedbackItemHeader.classList.add('feedback-item-header');
         feedbackItemHeader.textContent = 'New Feedback';
     
+        // Create the feedback item body
         const feedbackItemBody = document.createElement('div');
         feedbackItemBody.classList.add('feedback-item-body');
         feedbackItemBody.style.display = 'block';
     
-        const feedbackTitle = document.createElement('p');
-        feedbackTitle.textContent = 'Feedback comment:';
+        // Create the feedback form elements
+        const feedbackTitle = document.createElement('h4');
+        feedbackTitle.textContent = 'Opmerking:';
     
         const feedbackTextarea = document.createElement('textarea');
         feedbackTextarea.classList.add('edit-feedback-textarea');
     
+        // Render the feedback suggestions
+        const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestions();
+    
+        // Create save and cancel buttons
         const saveButton = document.createElement('button');
         saveButton.classList.add('save-feedback');
         saveButton.textContent = 'Save';
@@ -189,12 +71,14 @@ const FeedbackHandler = (() => {
         feedbackMeta.classList.add('feedback-meta');
         feedbackMeta.innerHTML = `Display-size: ${displaySize}<br>Elementor ID: ${elementorId}`;
     
+        // Insert the feedback form elements
         feedbackItemBody.appendChild(feedbackTitle);
         feedbackItemBody.appendChild(feedbackTextarea);
+        feedbackItemBody.insertAdjacentHTML('beforeend', suggestionsHtml);
         feedbackItemBody.appendChild(feedbackMeta);
         feedbackItemBody.appendChild(saveButton);
         feedbackItemBody.appendChild(cancelButton);
-    
+
         feedbackItem.appendChild(feedbackItemHeader);
         feedbackItem.appendChild(feedbackItemBody);
     
@@ -209,7 +93,7 @@ const FeedbackHandler = (() => {
                 elementPositions[el.dataset.id] = index;
             });
     
-            // Sort feedback items based on the position of the corresponding elementor elements	
+            // Sort feedback items based on the position of the corresponding elementor elements
             const feedbackItems = Array.from(feedbackListContainer.children);
             let inserted = false;
             for (let i = 0; i < feedbackItems.length; i++) {
@@ -234,7 +118,8 @@ const FeedbackHandler = (() => {
                 showFeedbackMessage('Please enter your feedback.', true);
                 return;
             }
-
+    
+            // Get the display size
             let currentPage = window.location.pathname;
             currentPage = currentPage.replace(/\/$/, ''); // Remove trailing slash if it exists
     
@@ -258,7 +143,7 @@ const FeedbackHandler = (() => {
                     feedbackItem.remove();
                     FeedbackMode.removePermanentHighlight(target);
                     FeedbackMode.enable();
-                    FeedbackHandler.fetchFeedback();
+                    feedbackRenderer.fetchFeedback();
                 } else {
                     showFeedbackMessage(data.data || 'Failed to save feedback.', true);
                 }
@@ -273,7 +158,7 @@ const FeedbackHandler = (() => {
         cancelButton.addEventListener('click', () => {
             feedbackItem.remove();
             FeedbackMode.removePermanentHighlight(target);
-            FeedbackMode.enable(); 
+            FeedbackMode.enable();
         });
     };
     
@@ -292,7 +177,7 @@ const FeedbackHandler = (() => {
         const textarea = document.createElement('textarea');
         textarea.value = originalComment;
         textarea.classList.add('edit-feedback-textarea');
-        textarea.style.minHeight = `${feedbackComment.offsetHeight + 20}px`;
+        textarea.style.minHeight = `${feedbackComment.offsetHeight + 40}px`;
     
         // Adjust the height of the textarea to fit its content
         textarea.style.height = 'auto';
@@ -395,7 +280,7 @@ const FeedbackHandler = (() => {
         });
     };
             
-    return { init, fetchFeedback, createFeedback};
+    return { init, createFeedback, handleEditFeedback, handleDeleteFeedback };
 })();
 
 export default FeedbackHandler;

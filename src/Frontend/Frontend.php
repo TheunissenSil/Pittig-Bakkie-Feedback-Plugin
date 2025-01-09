@@ -23,9 +23,18 @@ class Frontend {
             // Get script
             wp_enqueue_script(
                 'pittig-bakkie-feedback-plugin-frontend',
-                plugin_dir_url(__FILE__) . '../../assets/js/public.js',
+                plugin_dir_url(__FILE__) . '../../assets/js/public/public.js',
                 [],
                 '1.0.0',
+                true
+            );
+
+            // Enqueue self-hosted TinyMCE script
+            wp_enqueue_script(
+                'tinymce',
+                plugin_dir_url(__FILE__) . '../../assets/js/tinymce/tinymce.min.js',
+                [],
+                null,
                 true
             );
 

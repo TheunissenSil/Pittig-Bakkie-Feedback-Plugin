@@ -9,7 +9,11 @@
         <thead>
             <tr>
                 <th><?php esc_html_e('Username', 'pittig-bakkie-feedback-plugin'); ?></th>
-                <th><?php esc_html_e('Comment', 'pittig-bakkie-feedback-plugin'); ?></th>
+                <th style="width: 30%;"><?php esc_html_e('Comment', 'pittig-bakkie-feedback-plugin'); ?></th>
+                <th><?php esc_html_e('Admin Comment', 'pittig-bakkie-feedback-plugin'); ?></th>
+                <th><?php esc_html_e('Display Size', 'pittig-bakkie-feedback-plugin'); ?></th>
+                <th><?php esc_html_e('Feedback Page', 'pittig-bakkie-feedback-plugin'); ?></th>
+                <th><?php esc_html_e('Created At', 'pittig-bakkie-feedback-plugin'); ?></th>
                 <th><?php esc_html_e('Status', 'pittig-bakkie-feedback-plugin'); ?></th>
                 <th><?php esc_html_e('Actions', 'pittig-bakkie-feedback-plugin'); ?></th>
             </tr>

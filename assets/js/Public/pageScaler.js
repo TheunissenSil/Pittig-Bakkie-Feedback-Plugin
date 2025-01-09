@@ -1,6 +1,7 @@
+// Page scaler module
 const PageScaler = (() => {
+    // Configuration
     let config;
-
     const init = (cfg) => {
         config = cfg;
     };
