@@ -228,6 +228,9 @@ const FeedbackMode = (() => {
 
         target.appendChild(closeButton);
 
+        // Initialize the tinymce fields
+        FeedbackSuggestionHandler.initializeTinyMCE(elementorId);
+
         document.body.removeEventListener('mouseover', handleMouseOver);
     }
 

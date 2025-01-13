@@ -14,10 +14,18 @@ class FeedbackSuggestionHandler {
         // Add AJAX actions
         add_action('wp_ajax_get_feedback_suggestion', array($this, 'get_feedback_suggestion'));
         add_action('wp_ajax_nopriv_get_feedback_suggestion', array($this, 'get_feedback_suggestion'));
+
         add_action('wp_ajax_upload_image', array($this, 'upload_image'));
         add_action('wp_ajax_nopriv_upload_image', array($this, 'upload_image'));
+
         add_action('wp_ajax_save_feedback_suggestion', array($this, 'save_feedback_suggestion'));
         add_action('wp_ajax_nopriv_save_feedback_suggestion', array($this, 'save_feedback_suggestion'));
+
+        add_action('wp_ajax_edit_feedback_suggestion', array($this, 'edit_feedback_suggestion'));
+        add_action('wp_ajax_nopriv_edit_feedback_suggestion', array($this, 'edit_feedback_suggestion'));
+        
+        add_action('wp_ajax_delete_feedback_suggestion', array($this, 'delete_feedback_suggestion'));
+        add_action('wp_ajax_nopriv_delete_feedback_suggestion', array($this, 'delete_feedback_suggestion'));
     }
 
     // Validate nonce
@@ -102,6 +110,56 @@ class FeedbackSuggestionHandler {
             wp_send_json_success();
         } else {
             wp_send_json_error(__('Failed to save feedback suggestion.', 'pittig-bakkie-feedback-plugin'));
+        }
+    }
+
+    public function edit_feedback_suggestion() {
+        $this->validate_nonce();
+
+        if (!isset($_POST['suggestion_id']) || !isset($_POST['suggestion_value'])) {
+            wp_send_json_error(__('Missing required fields.', 'pittig-bakkie-feedback-plugin'));
+            return;
+        }
+
+        $suggestion_id = intval($_POST['suggestion_id']);
+        $suggestion_value = wp_kses_post($_POST['suggestion_value']); // Allow safe HTML
+
+        global $wpdb;
+        $result = $wpdb->update(
+            $this->table_name,
+            [
+                'suggestion_value' => $suggestion_value
+            ],
+            ['id' => $suggestion_id]
+        );
+
+        if ($result !== false) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error(__('Failed to update feedback suggestion.', 'pittig-bakkie-feedback-plugin'));
+        }
+    }
+
+    public function delete_feedback_suggestion() {
+        $this->validate_nonce();
+
+        if (!isset($_POST['suggestion_id'])) {
+            wp_send_json_error(__('Missing required fields.', 'pittig-bakkie-feedback-plugin'));
+            return;
+        }
+
+        $suggestion_id = intval($_POST['suggestion_id']);
+
+        global $wpdb;
+        $result = $wpdb->delete(
+            $this->table_name,
+            ['id' => $suggestion_id]
+        );
+
+        if ($result !== false) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error(__('Failed to delete feedback suggestion.', 'pittig-bakkie-feedback-plugin'));
         }
     }
 }

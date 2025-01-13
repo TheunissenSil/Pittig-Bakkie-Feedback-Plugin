@@ -149,56 +149,65 @@ const feedbackRenderer = (() => {
         });
 
         // Add event listeners for show suggestion buttons
+        addShowSuggestionEventListeners();
+
+        // Add event listeners for edit suggestion buttons
+        FeedbackSuggestionHandler.addSuggestionEventListeners();
+    };
+
+    // Function to add event listeners for show suggestion buttons
+    const addShowSuggestionEventListeners = () => {
         document.querySelectorAll('.show-suggestion').forEach(button => {
             button.addEventListener('click', (e) => {
                 const elementorId = e.target.dataset.elementorId;
                 const feedbackId = e.target.dataset.feedbackId;
                 const suggestionBody = e.target.closest('.feedback-item-body').querySelector('.suggestion-wrapper');
-
+    
                 const originalContent = suggestionBody.innerHTML; // Save the original content
-
+    
                 const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestionInput(elementorId, true);
                 suggestionBody.innerHTML = suggestionsHtml;
-
+    
                 // Create the cancel suggestion button
                 const cancelSuggestionButton = document.createElement('button');
                 cancelSuggestionButton.classList.add('cancel-suggestion');
                 cancelSuggestionButton.textContent = 'Cancel Suggestion';
-
+    
                 // Create the save suggestion button
                 const saveSuggestionButton = document.createElement('button');
                 saveSuggestionButton.classList.add('save-suggestion');
                 saveSuggestionButton.textContent = 'Save Suggestion';
-
+    
                 // Add the cancel and save suggestion buttons to the suggestion body
                 suggestionBody.appendChild(cancelSuggestionButton);
                 suggestionBody.appendChild(saveSuggestionButton);
-
+    
                 // Initialize TinyMCE if needed
                 const element = document.querySelector(`.elementor-element[data-id="${elementorId}"]`);
-                const elementTypeClass = element.dataset.element_type === 'widget' 
-                    ? Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-')) 
-                    : element.dataset.element_type;
-
+                const elementTypeClass = FeedbackSuggestionHandler.getElementType(element);
+    
                 if (!elementTypeClass) {
                     console.error('Element type not found for ID:', elementId);
                     return { success: false, data: 'Element type not found' };
                 }
-
+    
                 // Add event listener to cancel suggestion button to restore the original content
                 cancelSuggestionButton.addEventListener('click', () => {
                     suggestionBody.innerHTML = originalContent;
                     e.target.style.display = 'block';
                     FeedbackSuggestionHandler.destroyTinyMCE(elementorId);
+                    addShowSuggestionEventListeners(); // Reapply event listeners
                 });
-
+    
                 // Add event listener to save suggestion button to save the suggestion
                 saveSuggestionButton.addEventListener('click', () => {
                     FeedbackSuggestionHandler.saveSuggestion(elementorId, feedbackId)
-                        .then(response => {
+                        .then(async response => {
                             if (response.success) {
                                 FeedbackHandler.showFeedbackMessage('Suggestion saved successfully.');
-                                fetchFeedback();
+                                const newSuggestionHtml = await FeedbackSuggestionHandler.renderSuggestion(elementorId, feedbackId);
+                                suggestionBody.innerHTML = newSuggestionHtml;
+                                addShowSuggestionEventListeners(); // Reapply event listeners
                             } else {
                                 FeedbackHandler.showFeedbackMessage('Failed to save suggestion.', true);
                             }
@@ -208,7 +217,7 @@ const feedbackRenderer = (() => {
                             FeedbackHandler.showFeedbackMessage('Failed to save suggestion.', true);
                         });
                 });
-
+    
                 e.target.style.display = 'none';
             });
         });

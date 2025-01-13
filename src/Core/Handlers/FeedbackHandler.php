@@ -4,14 +4,12 @@ namespace PittigBakkieFeedbackPlugin\Core\Handlers;
 
 class FeedbackHandler {
     private $table_name;
-    private $suggestions_table_name;
 
     public function __construct() {
         global $wpdb;
 
-        // Set table names
+        // Set table name
         $this->table_name = $wpdb->prefix . 'pittig_bakkie_feedback';
-        $this->suggestions_table_name = $wpdb->prefix . 'pittig_bakkie_feedback_suggestions';
 
         // Add AJAX actions
         add_action('wp_ajax_get_feedback', [$this, 'get_feedback']);
