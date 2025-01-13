@@ -299,6 +299,10 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     flex-direction: row;
 }
 
+/*     
+    // add and delete feedback
+*/
+
 .feedback-item-body .editable-feedback {
     font-size: 15px;
 }
@@ -346,7 +350,6 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     color: var(--text-color);
 }
 
-/* Delete and edit button styling */
 .feedback-item-body .delete-feedback {
     background: url('../img/delete-icon.png') no-repeat center center;
     background-size: contain;
@@ -383,6 +386,9 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
     right: 30px; /* Adjusted to make space for delete icon */
 }
 
+/*     
+    // Feedback suggestions
+*/
 .suggestion-body .delete-suggestion {
     background: url('../img/delete-icon.png') no-repeat center center;
     background-size: contain;
@@ -397,4 +403,50 @@ body > *:not(#wp-adminbar) .feedback-sidebar {
 
 .suggestion-hidden {
     display: none;
+}
+
+.suggestion-wrapper {
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.feedback-item-body .show-suggestion {
+    margin-bottom: 10px;
+}
+
+.suggestion-wrapper .save-suggestion,
+.suggestion-wrapper .add-to-page,
+.suggestion-wrapper .show-suggestion,
+.feedback-item-body .show-suggestion {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.suggestion-wrapper .save-suggestion:hover,
+.suggestion-wrapper .add-to-page:hover,
+.suggestion-wrapper .show-suggestion:hover,
+.feedback-item-body .show-suggestion:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+}
+
+.suggestion-wrapper .cancel-suggestion,
+.feedback-item-body .cancel-suggestion {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--secondary-color);
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.suggestion-wrapper .cancel-suggestion:hover,
+.feedback-item-body .cancel-suggestion:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
 }

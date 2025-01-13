@@ -44,34 +44,44 @@ const feedbackRenderer = (() => {
     const renderFeedbackList = async (feedbackItems) => {
         const feedbackListContainer = document.getElementById('feedback-list');
         const elementorElements = Array.from(document.querySelectorAll('.elementor-element'));
-
+    
         // If no feedback items are available, display no feedback message
         if (!feedbackItems.length) {
             feedbackListContainer.innerHTML = '<p>No feedback available.</p>';
             return;
         } 
-
+    
         // Sort feedback items based on the order of the elements on the page
         // Check if the feedback needs to be displayed on the current page
         const currentPage = window.location.pathname.replace(/\/$/, '');
-
         const elementPositions = {};
         elementorElements.forEach((el, index) => {
             elementPositions[el.dataset.id] = index;
         });
-
+    
+        // Filter feedback items for the current page so that they are displayed in the correct order
         feedbackItems = feedbackItems.filter(item => item.element_feedback_page === currentPage);
-
         feedbackItems.sort((a, b) => {
             const posA = elementPositions[a.elementor_id];
             const posB = elementPositions[b.elementor_id];
             return posA - posB;
         });
-
+    
         // Render feedback items
         const listHtml = await Promise.all(feedbackItems.map(async (item) => {
+            // Get the first 5 words of the feedback comment
             const feedbackTitle = item.feedback_comment.split(' ').slice(0, 5).join(' ') + '...';
+
+            // Get the feedback suggestion 
             const suggestionHtml = await FeedbackSuggestionHandler.renderSuggestion(item.elementor_id, item.id);
+
+            // Get the element type class
+            const elementTypeClass = FeedbackSuggestionHandler.getElementType(document.querySelector(`[data-id="${item.elementor_id}"]`));
+
+            // Add the add to page button if the user is an admin and the suggestion is not already added to the page
+            const addToPageButton = config.isAdmin && !suggestionHtml.includes('<button class="show-suggestion"') && suggestionHtml !== '<p>Only the owner can add a suggestion.</p>' && (elementTypeClass === 'elementor-widget-text-editor' || elementTypeClass === 'elementor-widget-image') ? `
+                <button class="add-to-page" data-suggestion-id="${item.id}">Add to page</button>
+            ` : '';
             return `
                 <div class="feedback-item ${item.username === config.sessionUsername ? 'editable-feedback' : ''}" data-id="${item.id}" data-elementor-id="${item.elementor_id}">
                     <div class="feedback-item-header">
@@ -89,6 +99,7 @@ const feedbackRenderer = (() => {
                         <h4 class="suggestion-title">Verander content:</h4>
                         <div class="suggestion-wrapper">
                             ${suggestionHtml}
+                            ${addToPageButton}
                         </div>
                         <p class="feedback-meta">
                             Username: ${item.username || 'Anonymous'}<br>
@@ -107,16 +118,16 @@ const feedbackRenderer = (() => {
                 </div>
             `;
         }));
-
+    
         feedbackListContainer.innerHTML = listHtml.join('');
-
+    
         // Add event listeners for accordion functionality
         document.querySelectorAll('.feedback-item-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 // Check if the accordion is open
                 const body = header.nextElementSibling;
                 const isOpen = body.style.display === 'block';
-
+    
                 // Get the target element
                 const elementorId = header.closest('.feedback-item').dataset.elementorId;
                 const iframe = document.querySelector('#phone-size-iframe');
@@ -147,36 +158,47 @@ const feedbackRenderer = (() => {
         document.querySelectorAll('.delete-feedback').forEach(button => {
             button.addEventListener('click', FeedbackHandler.handleDeleteFeedback);
         });
-
+    
         // Add event listeners for show suggestion buttons
         addShowSuggestionEventListeners();
-
+    
         // Add event listeners for edit suggestion buttons
         FeedbackSuggestionHandler.addSuggestionEventListeners();
+    
+        // Add event listeners for add to page buttons
+        document.querySelectorAll('.add-to-page').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const suggestionId = e.target.dataset.suggestionId;
+                FeedbackSuggestionHandler.addToPage(suggestionId);
+            });
+        });
     };
-
+    
     // Function to add event listeners for show suggestion buttons
     const addShowSuggestionEventListeners = () => {
         document.querySelectorAll('.show-suggestion').forEach(button => {
             button.addEventListener('click', (e) => {
+                // Get the suggestion body
                 const elementorId = e.target.dataset.elementorId;
                 const feedbackId = e.target.dataset.feedbackId;
                 const suggestionBody = e.target.closest('.feedback-item-body').querySelector('.suggestion-wrapper');
     
-                const originalContent = suggestionBody.innerHTML; // Save the original content
+                // Save the original content
+                const originalContent = suggestionBody.innerHTML; 
     
+                // Render the suggestion input
                 const suggestionsHtml = FeedbackSuggestionHandler.renderSuggestionInput(elementorId, true);
                 suggestionBody.innerHTML = suggestionsHtml;
     
                 // Create the cancel suggestion button
                 const cancelSuggestionButton = document.createElement('button');
                 cancelSuggestionButton.classList.add('cancel-suggestion');
-                cancelSuggestionButton.textContent = 'Cancel Suggestion';
+                cancelSuggestionButton.textContent = 'Cancel';
     
                 // Create the save suggestion button
                 const saveSuggestionButton = document.createElement('button');
                 saveSuggestionButton.classList.add('save-suggestion');
-                saveSuggestionButton.textContent = 'Save Suggestion';
+                saveSuggestionButton.textContent = 'Save';
     
                 // Add the cancel and save suggestion buttons to the suggestion body
                 suggestionBody.appendChild(cancelSuggestionButton);
@@ -207,6 +229,7 @@ const feedbackRenderer = (() => {
                                 FeedbackHandler.showFeedbackMessage('Suggestion saved successfully.');
                                 const newSuggestionHtml = await FeedbackSuggestionHandler.renderSuggestion(elementorId, feedbackId);
                                 suggestionBody.innerHTML = newSuggestionHtml;
+                                FeedbackSuggestionHandler.addSuggestionEventListeners();
                                 addShowSuggestionEventListeners(); // Reapply event listeners
                             } else {
                                 FeedbackHandler.showFeedbackMessage('Failed to save suggestion.', true);
@@ -223,7 +246,7 @@ const feedbackRenderer = (() => {
         });
     };
 
-    return { init, fetchFeedback };
+    return { init, fetchFeedback, addShowSuggestionEventListeners };
 })();
 
 export default feedbackRenderer;

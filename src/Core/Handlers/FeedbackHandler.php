@@ -4,12 +4,14 @@ namespace PittigBakkieFeedbackPlugin\Core\Handlers;
 
 class FeedbackHandler {
     private $table_name;
+    private $suggestions_table_name;
 
     public function __construct() {
         global $wpdb;
 
-        // Set table name
+        // Set table names
         $this->table_name = $wpdb->prefix . 'pittig_bakkie_feedback';
+        $this->suggestions_table_name = $wpdb->prefix . 'pittig_bakkie_feedback_suggestions';
 
         // Add AJAX actions
         add_action('wp_ajax_get_feedback', [$this, 'get_feedback']);
@@ -24,9 +26,8 @@ class FeedbackHandler {
         add_action('wp_ajax_save_feedback', [$this, 'save_feedback']);
         add_action('wp_ajax_nopriv_save_feedback', [$this, 'save_feedback']);
 
-        add_action('wp_ajax_add_admin_comment', [$this, 'add_admin_comment']);
-        add_action('wp_ajax_edit_admin_comment', [$this, 'edit_admin_comment']);
-        add_action('wp_ajax_delete_admin_comment', [$this, 'delete_admin_comment']);
+        add_action('wp_ajax_get_feedback_by_id', [$this, 'get_feedback_by_id']);
+        add_action('wp_ajax_nopriv_get_feedback_by_id', [$this, 'get_feedback_by_id']);
 
         add_action('wp_ajax_change_status', [$this, 'change_status']);
     }
@@ -44,6 +45,32 @@ class FeedbackHandler {
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('Unauthorized request.', 'pittig-bakkie-feedback-plugin'));
             exit;
+        }
+    }
+
+    public function get_feedback_by_id() {
+        $this->validate_nonce();
+    
+        global $wpdb;
+    
+        // Get feedback ID from request
+        $feedback_id = intval($_POST['feedback_id']);
+    
+        // Query feedback data by ID
+        $feedback = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT id, elementor_id, feedback_comment, admin_comment, element_feedback_page, username, display_size, status, created_at 
+                 FROM $this->table_name
+                 WHERE id = %d",
+                $feedback_id
+            ),
+            ARRAY_A
+        );
+    
+        if ($feedback) {
+            wp_send_json_success($feedback); // Return data as JSON
+        } else {
+            wp_send_json_error(__('Feedback not found.', 'pittig-bakkie-feedback-plugin')); // Return error if no data is found
         }
     }
 
@@ -213,86 +240,6 @@ class FeedbackHandler {
             wp_send_json_success(['feedback_id' => $feedback_id, 'message' => __('Feedback saved successfully.', 'pittig-bakkie-feedback-plugin')]);
         } else {
             wp_send_json_error(__('Failed to save feedback.', 'pittig-bakkie-feedback-plugin'));
-        }
-    }
-
-    // Add admin comment
-    public function add_admin_comment() {
-        $this->validate_nonce();
-        $this->check_admin_permissions();
-
-        global $wpdb;
-
-        // Get variables
-        $feedback_id = intval($_POST['id']);
-        $admin_comment = sanitize_text_field($_POST['admin_comment']);
-
-        // Update the feedback with the admin comment
-        $updated = $wpdb->update(
-            $this->table_name,
-            ['admin_comment' => $admin_comment],
-            ['id' => $feedback_id],
-            ['%s'],
-            ['%d']
-        );
-
-        if ($updated) {
-            wp_send_json_success(__('Admin comment added successfully.', 'pittig-bakkie-feedback-plugin'));
-        } else {
-            wp_send_json_error(__('Failed to add admin comment.', 'pittig-bakkie-feedback-plugin'));
-        }
-    }
-
-    // Edit admin comment
-    public function edit_admin_comment() {
-        $this->validate_nonce();
-        $this->check_admin_permissions();
-
-        global $wpdb;
-
-        // Get variables
-        $feedback_id = intval($_POST['id']);
-        $admin_comment = sanitize_text_field($_POST['admin_comment']);
-
-        // Update the feedback with the new admin comment
-        $updated = $wpdb->update(
-            $this->table_name,
-            ['admin_comment' => $admin_comment],
-            ['id' => $feedback_id],
-            ['%s'],
-            ['%d']
-        );
-
-        if ($updated) {
-            wp_send_json_success(__('Admin comment edited successfully.', 'pittig-bakkie-feedback-plugin'));
-        } else {
-            wp_send_json_error(__('Failed to edit admin comment.', 'pittig-bakkie-feedback-plugin'));
-        }
-    }
-
-    // Delete admin comment
-    public function delete_admin_comment() {
-        $this->validate_nonce();
-        $this->check_admin_permissions();
-
-        global $wpdb;
-
-        // Get variables
-        $feedback_id = intval($_POST['id']);
-
-        // Update the feedback to remove the admin comment
-        $updated = $wpdb->update(
-            $this->table_name,
-            ['admin_comment' => ''],
-            ['id' => $feedback_id],
-            ['%s'],
-            ['%d']
-        );
-
-        if ($updated) {
-            wp_send_json_success(__('Admin comment deleted successfully.', 'pittig-bakkie-feedback-plugin'));
-        } else {
-            wp_send_json_error(__('Failed to delete admin comment.', 'pittig-bakkie-feedback-plugin'));
         }
     }
 

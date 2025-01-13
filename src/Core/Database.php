@@ -55,6 +55,7 @@ class Database {
             element_type VARCHAR(50) NOT NULL,
             suggestion_value TEXT NOT NULL,
             feedback_element VARCHAR(255),
+            post_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (feedback_id) REFERENCES $feedback_table_name(id) ON DELETE CASCADE
         ) $charset_collate;";

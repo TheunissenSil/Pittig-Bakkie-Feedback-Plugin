@@ -142,9 +142,8 @@ const FeedbackHandler = (() => {
             showSuggestionButton.style.display = 'none';
 
             // Initialize TinyMCE if needed
-            const elementTypeClass = element.dataset.element_type === 'widget' 
-                ? Array.from(element.classList).find(cls => cls.startsWith('elementor-widget-')) 
-                : element.dataset.element_type;
+            const elementTypeClass = FeedbackSuggestionHandler.getElementType(target);
+            console.log(elementTypeClass);
 
             if (!elementTypeClass) {
                 console.error('Element type not found for ID:', elementId);
