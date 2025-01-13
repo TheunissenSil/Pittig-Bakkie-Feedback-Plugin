@@ -33,6 +33,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <tr>
                 <td>${item.username}</td>
                 <td>${item.feedback_comment}</td>
+                <td>${item.admin_comment || ''}</td>
+                <td>${item.display_size || ''}</td>
+                <td>${item.element_feedback_page || ''}</td>
+                <td>${new Date(item.created_at).toLocaleString()}</td>
                 <td>
                     <select class="feedback-status" data-id="${item.id}">
                         <option value="pending" ${item.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -45,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>
             </tr>
         `).join('');
-
+    
         // Add event listeners for status change and go to feedback buttons
         feedbackList.querySelectorAll('.feedback-status').forEach(select => {
             select.addEventListener('change', handleChangeStatus);
