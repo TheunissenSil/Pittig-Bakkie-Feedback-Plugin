@@ -1,0 +1,452 @@
+/* Global style */
+:root {
+    --primary-color: #312476;
+    --secondary-color: #20fcc1;
+    --text-color: #0f0f0f;
+    --text-color-light: #ffffff;
+}
+
+.pb-button {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+    border-radius: 50px 50px 50px 50px;
+    padding: 08px 30px 08px 30px;
+    border: none;
+    cursor: pointer;
+}
+.pb-button:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color-light) !important;
+}
+
+/* Feedback enable button */
+.feedback-mode-button-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+} 
+
+.feedback-mode-active .feedback-mode-button {
+    display: none;
+}  
+
+.access-key-form {
+    background-color: var(--primary-color);
+    border-radius: 50px;
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.access-key-form input {
+    border-radius: 25px 0 0 25px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    max-width: 200px !important;
+    color: var(--text-color) !important;
+    background-color: var(--text-color-light) !important;
+}
+
+.access-key-form button {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color-light) !important;
+    border-radius: 50px;
+    padding: 08px 30px 08px 30px;
+    border: none;
+    cursor: pointer;
+}
+
+.access-key-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    text-align: center;
+    padding-bottom: 5px;
+}
+
+/* Feedback mode */
+.feedback-mode-active .elementor-element.outlined {
+    cursor: pointer;
+}
+
+.feedback-mode-active .elementor-element.outlined::before,
+.feedback-mode-active .elementor-element.permanent-highlight::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    outline: 1px solid var(--primary-color);
+    z-index: 1000 !important;
+    background-color: rgba(49, 36, 118, 0.1) !important;
+    pointer-events: none;
+
+    /* Add transition for smooth effect */
+    transition: outline-color 0.1s ease, background-color 0.1s ease;
+}
+
+.close-button-in-element {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    background-image: url('../img/close-icon.png');
+    background-size: 50%;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Sidebar styles */
+body > *:not(#feedback-sidebar):not(#wp-adminbar) {
+    transform: scale(1); 
+    transform-origin: top left; 
+    transition: transform 0.3s ease; 
+}
+
+.feedback-mode-active .feedback-sidebar {
+    right: 0; 
+    height: 100vh; 
+}
+
+#wpadminbar {
+    z-index: 1001;
+    position: fixed;
+}
+
+body > *:not(#wp-adminbar) .feedback-sidebar {
+    padding-top: 0px;
+}
+
+.feedback-sidebar {
+    position: fixed;
+    right: -350px;
+    top: 0;
+    width: 350px;
+    height: 100vh; 
+    background-color: var(--primary-color);
+    font-family: 'Poppins';
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: right 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    padding-top: 32px;
+}
+
+.feedback-mode-active .feedback-sidebar {
+    right: 0 !important;
+}
+
+.feedback-sidebar .close-icon {
+    position: absolute;
+    top: 52px;
+    left: 20px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+}
+
+.feedback-sidebar .feedback-sidebar-content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+}
+
+.feedback-sidebar .feedback-sidebar-body {
+    height: 100%;
+    padding: 30px 0;
+    overflow: hidden;
+}
+
+.feedback-sidebar .feedback-sidebar-body h2 {
+    font-size: 2em;
+    color: var(--text-color-light);
+}
+
+.feedback-sidebar .feedback-sidebar-header {
+    display: flex;
+    justify-content: center;
+}
+
+.feedback-sidebar .feedback-sidebar-header .feedback-sidebar .feedback-sidebar-header {
+    display: flex;
+    justify-content: center;
+}
+
+.feedback-sidebar .feedback-sidebar-footer #scale-to-phone {
+    width: 100%;
+}
+
+.feedback-sidebar .feedback-sidebar-footer #scale-to-phone:hover {
+    background-color: var(--secondary-color) !important;
+    color: var(--text-color) !important;
+}
+
+.feedback-message {
+    font-size: 14px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Feedback item styles */
+.feedback-sidebar #feedback-list {
+    color: var(--text-color-light);
+    height: 90%;
+    padding-right: 10px;
+    overflow-y: scroll;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar {
+    width: 8px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-track {
+    background: var(--text-color-light);
+    border-radius: 10px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+.feedback-sidebar #feedback-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-color-light);
+}
+
+.feedback-item {
+    background-color: #F4F4F4;
+    color: var(--text-color);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.feedback-item-header {
+    padding: 10px;
+    cursor: pointer;
+    background-color: var(--text-color-light);
+    color: var(--text-color);
+    border-radius: 10px;
+    font-size: 15px; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feedback-item-header .feedback-date {
+    font-size: 12px; 
+    color: var(--text-color);
+}
+
+.feedback-item-body {
+    padding: 10px;
+    display: none;
+    flex-direction: column;
+    background-color: #F4F4F4;
+    font-size: 13px; 
+    position: relative;
+}
+
+.feedback-item-body .feedback-body,
+.feedback-item-body .suggestion-body {
+    background-color: var(--text-color-light);
+    padding: 25px 10px 10px 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.feedback-item-body .feedback-body {
+    position: relative;
+}
+
+.feedback-item-body p {
+    color: var(--text-color);
+}
+
+.feedback-item-body h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.feedback-item-body .feedback-meta {
+    font-size: 12px;
+    color: #666666;
+}
+
+.feedback-item-body .admin-comment {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: 3px solid var(--primary-color);
+    font-size: 12px;
+    color: #333333;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+/*     
+    // add and delete feedback
+*/
+
+.feedback-item-body .editable-feedback {
+    font-size: 15px;
+}
+
+/* Textarea styling */
+.feedback-item-body .edit-feedback-textarea {
+    width: 100%;
+    height: auto;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+/* Save and cancel button styling */
+.feedback-item-body .save-feedback {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.feedback-item-body .save-feedback:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+}
+
+.feedback-item-body .cancel-feedback {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--secondary-color);
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.feedback-item-body .cancel-feedback:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+.feedback-item-body .delete-feedback {
+    background: url('../img/delete-icon.png') no-repeat center center;
+    background-size: contain;
+    border: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: absolute;
+    bottom: 10px;
+    right: 5px;
+}
+
+.feedback-item-body .edit-feedback {
+    background: url('../img/pencil-icon.png') no-repeat center center;
+    background-size: contain;
+    border: none;
+    width: 10px;
+    height: 10px;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.suggestion-body .edit-suggestion {
+    background: url('../img/pencil-icon.png') no-repeat center center;
+    background-size: contain;
+    border: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 30px; /* Adjusted to make space for delete icon */
+}
+
+/*     
+    // Feedback suggestions
+*/
+.suggestion-body .delete-suggestion {
+    background: url('../img/delete-icon.png') no-repeat center center;
+    background-size: contain;
+    border: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.suggestion-hidden {
+    display: none;
+}
+
+.suggestion-wrapper {
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.feedback-item-body .show-suggestion {
+    margin-bottom: 10px;
+}
+
+.suggestion-wrapper .save-suggestion,
+.suggestion-wrapper .add-to-page,
+.suggestion-wrapper .show-suggestion,
+.feedback-item-body .show-suggestion {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.suggestion-wrapper .save-suggestion:hover,
+.suggestion-wrapper .add-to-page:hover,
+.suggestion-wrapper .show-suggestion:hover,
+.feedback-item-body .show-suggestion:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
+}
+
+.suggestion-wrapper .cancel-suggestion,
+.feedback-item-body .cancel-suggestion {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--secondary-color);
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.suggestion-wrapper .cancel-suggestion:hover,
+.feedback-item-body .cancel-suggestion:hover {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
